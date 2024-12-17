@@ -1,55 +1,117 @@
 import { useSession } from "@/hooks/useSession";
-import { router } from "expo-router";
+import { router, useRouter } from "expo-router";
 
-import React, { useContext, useState } from "react";
-import { Image, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import { Alert, Image, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import * as Application from "expo-application";
 import * as Haptics from "expo-haptics";
 import { SquircleView } from "expo-squircle-view";
-import * as WebBrowser from "expo-web-browser";
-import Button from "../components/Button";
-import { LogSnagContext } from "../contexts/LogSnagProvider";
-import { logSnagIdentifyUser } from "../utils/logSnagIdentifyUser";
-import Facebook from "../svgs/Facebook";
+import Button from "../../components/Button";
 import { Ionicons } from "@expo/vector-icons";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { supabase } from "@/utils/supabase";
+import { makeRedirectUri } from "expo-auth-session";
+import { openAuthSessionAsync } from "expo-web-browser";
+import * as WebBrowser from "expo-web-browser";
+import { useStorageState } from "@/hooks/useStorageState";
+
+WebBrowser.maybeCompleteAuthSession();
+
+const redirectUri = makeRedirectUri();
 
 export default function SignInScreen() {
-    const { signIn } = useSession();
+	const { setSession, signIn } = useSession();
+    const router = useRouter();
 
-	const logo = require("../../assets/icon.png");
+	const logo = require("../../assets/images/icon.png");
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 
-	const appleOAuth = useOAuth({ strategy: "oauth_apple" });
-	const googleOAuth = useOAuth({ strategy: "oauth_google" });
-	const facebookOAuth = useOAuth({ strategy: "oauth_facebook" });
+	// const appleOAuth = useOAuth({ strategy: "oauth_apple" });
+	// const googleOAuth = useOAuth({ strategy: "oauth_google" });
+	// const facebookOAuth = useOAuth({ strategy: "oauth_facebook" });
 
-	const onPressOAuth = React.useCallback(async (OAuth) => {
-		try {
-			const { createdSessionId, signIn, signUp, setActive } = await OAuth.startOAuthFlow();
-
-			if (createdSessionId) {
-				await setActive({ session: createdSessionId });
-
-				Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-			}
-		} catch (err) {
-			console.error("OAuth error", JSON.stringify(err, null, 2));
-		}
+	// const onPressOAuth = React.useCallback(async (OAuth) => {
+	const onPressOAuth = React.useCallback(async () => {
+		// try {
+		// 	const { createdSessionId, signIn, signUp, setActive } = await OAuth.startOAuthFlow();
+		// 	if (createdSessionId) {
+		// 		await setActive({ session: createdSessionId });
+		// 		Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+		// 	}
+		// } catch (err) {
+		// 	console.error("OAuth error", JSON.stringify(err, null, 2));
+		// }
 	}, []);
 
+	const handleGitHubSignIn = async () => {
+		try {
+			// 1. Récupérer l'URL d'authentification pour GitHub via Supabase
+			const { data, error } = await supabase.auth.signInWithOAuth({
+				provider: "github",
+				options: { redirectTo: redirectUri },
+			});
+
+			console.log(redirectUri);
+
+			if (error) {
+				console.error("Erreur lors de l’authentification :", error.message);
+				return;
+			}
+
+			// 2. Ouvrir le navigateur pour GitHub OAuth
+			const authUrl = data.url; // URL de connexion générée par Supabase
+			const result = await openAuthSessionAsync(authUrl, redirectUri);
+
+			if (result.type === "success" && result.url) {
+				const urlParams = new URLSearchParams(result.url.split("#")[1]);
+
+				const accessToken = urlParams.get("access_token");
+				const refreshToken = urlParams.get("refresh_token");
+
+				if (!accessToken) throw new Error("Le token d'accès est manquant.");
+				if (!refreshToken) throw new Error("Le token de refresh est manquant.");
+
+				// Étape 3 : Authentifier manuellement Supabase avec les tokens
+				const { error: sessionError } = await supabase.auth.setSession({
+					access_token: accessToken,
+					refresh_token: refreshToken,
+				});
+
+				if (sessionError) throw sessionError;
+
+				console.log("Session établie avec Supabase 🎉"); 
+
+				// Étape 5 : Récupérer l'utilisateur
+				const {data: {session}, error} = await supabase.auth.getSession();
+				if (error) throw error;
+
+                setSession(JSON.stringify(session));
+                console.log("ma session", session);
+                
+                
+                router.replace('/(app)');
+			} else {
+				console.log("Authentification annulée ou échouée.");
+			}
+		} catch (err) {
+			console.error("Erreur générale :", err);
+		}
+	};
+
 	const onPressAppleOAuth = () => {
-		onPressOAuth(appleOAuth);
+		// onPressOAuth(appleOAuth);
+		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
 	};
 
 	const onPressGoogleOAuth = () => {
-		onPressOAuth(googleOAuth);
+		// onPressOAuth(googleOAuth);
 	};
 
 	const onPressFacebookOAuth = () => {
-		onPressOAuth(facebookOAuth);
+		// onPressOAuth(facebookOAuth);
 	};
 
 	// const onSignInPress = async () => {
@@ -94,7 +156,7 @@ export default function SignInScreen() {
 				/>
 				<Text
 					style={{
-						fontFamily: fonts.bold,
+						// fontFamily: fonts.bold,
 						fontSize: 22,
 						color: "#123c5b",
 					}}
@@ -106,51 +168,51 @@ export default function SignInScreen() {
 			<View style={s.body}>
 				<Text style={s.title}>Bienvenue!</Text>
 				{/* <KeyboardAvoidingView
-                    enabled
-                    style={s.form}
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                >
-                    <View>
-                        <TextInput
-                            style={s.input}
-                            autoCapitalize="none"
-                            value={emailAddress}
-                            placeholder="Email..."
-                            onChangeText={(emailAddress) =>
-                                setEmailAddress(emailAddress)
-                            }
-                        />
-                    </View>
+                        enabled
+                        style={s.form}
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    >
+                        <View>
+                            <TextInput
+                                style={s.input}
+                                autoCapitalize="none"
+                                value={emailAddress}
+                                placeholder="Email..."
+                                onChangeText={(emailAddress) =>
+                                    setEmailAddress(emailAddress)
+                                }
+                            />
+                        </View>
 
-                    <View>
-                        <TextInput
-                            style={s.input}
-                            value={password}
-                            placeholder="Password..."
-                            secureTextEntry={true}
-                            onChangeText={(password) => setPassword(password)}
-                        />
-                    </View>
-                </KeyboardAvoidingView>
+                        <View>
+                            <TextInput
+                                style={s.input}
+                                value={password}
+                                placeholder="Password..."
+                                secureTextEntry={true}
+                                onChangeText={(password) => setPassword(password)}
+                            />
+                        </View>
+                    </KeyboardAvoidingView>
 
-                <TouchableOpacity>
-                    <Text style={{
-                        fontFamily: fonts.regular
-                    }}>Mot de passe oublié?</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity>
+                        <Text style={{
+                            fontFamily: fonts.regular
+                        }}>Mot de passe oublié?</Text>
+                    </TouchableOpacity>
 
-                <Button
-                    onPress={onSignInPress}
-                    disabled={!emailAddress || !password}
-                >
-                    <Text style={s.btnText}>Let's go</Text>
-                </Button> */}
+                    <Button
+                        onPress={onSignInPress}
+                        disabled={!emailAddress || !password}
+                    >
+                        <Text style={s.btnText}>Let's go</Text>
+                    </Button> */}
 
 				<Text
 					style={{
 						textAlign: "center",
 						color: "#1F1F1F",
-						fontFamily: fonts.medium,
+						// fontFamily: fonts.medium,
 						fontSize: 16,
 						marginTop: 20,
 					}}
@@ -159,41 +221,60 @@ export default function SignInScreen() {
 				</Text>
 
 				<View style={s.socialsContainer}>
-					<TouchableOpacity style={s.socialBtn} onPress={onPressAppleOAuth}>
-						<SquircleView
-							style={s.socialBtnBody}
-							squircleParams={{
-								cornerSmoothing: 0.7,
-								cornerRadius: 18,
-								fillColor: "#000",
+					{/* <AppleAuthentication.AppleAuthenticationButton
+							buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+							buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+							cornerRadius={5}
+							style={{ width: 200, height: 64 }}
+							onPress={async () => {
+								try {
+									const credential = await AppleAuthentication.signInAsync({
+										requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+									});
+									// Sign in via Supabase Auth.
+									if (credential.identityToken) {
+										const {
+											error,
+											data: { user },
+										} = await supabase.auth.signInWithIdToken({
+											provider: "apple",
+											token: credential.identityToken,
+										});
+										console.log(JSON.stringify({ error, user }, null, 2));
+										if (!error) {
+											// User is signed in.
+										}
+									} else {
+										throw new Error("No identityToken.");
+									}
+								} catch (e: any) {
+									if (e.code === "ERR_REQUEST_CANCELED") {
+										// handle that the user canceled the sign-in flow
+									} else {
+										// handle other errors
+									}
+								}
 							}}
-						>
-							<Apple width={34} height={34} fill="#fff" />
+						/> */}
+
+					<TouchableOpacity onPress={() => handleGitHubSignIn()}>
+						<SquircleView style={s.socialBtnBody} cornerSmoothing={70} borderRadius={18} backgroundColor="#000">
+							<Ionicons name="logo-github" size={34} color="#fff" />
 						</SquircleView>
 					</TouchableOpacity>
-					<TouchableOpacity style={s.socialBtn} onPress={onPressGoogleOAuth}>
-						<SquircleView
-							style={s.socialBtnBody}
-							squircleParams={{
-								cornerSmoothing: 0.7,
-								cornerRadius: 18,
-								fillColor: "#EA4335",
-							}}
-						>
-							{/* <Google width={26} height={26} fill="#fff" /> */}
-                            <Ionicons name="logo-google" />
+					<TouchableOpacity onPress={onPressAppleOAuth}>
+						<SquircleView style={s.socialBtnBody} cornerSmoothing={70} borderRadius={18} backgroundColor="#000">
+							<Ionicons name="logo-apple" size={34} color="#fff" />
 						</SquircleView>
 					</TouchableOpacity>
-					<TouchableOpacity style={s.socialBtn} onPress={onPressFacebookOAuth}>
-						<SquircleView
-							style={s.socialBtnBody}
-							squircleParams={{
-								cornerSmoothing: 0.7,
-								cornerRadius: 18,
-								fillColor: "#1877F2",
-							}}
-						>
-							<Facebook width={27} height={27} fill="#fff" />
+					<TouchableOpacity onPress={onPressGoogleOAuth}>
+						<SquircleView style={s.socialBtnBody} cornerSmoothing={70} borderRadius={18} backgroundColor="#EA4335">
+							<Ionicons name="logo-google" size={34} color="#fff" />
+						</SquircleView>
+					</TouchableOpacity>
+					<TouchableOpacity onPress={onPressFacebookOAuth}>
+						<SquircleView style={s.socialBtnBody} cornerSmoothing={70} borderRadius={18} backgroundColor="#1877F2">
+							<Ionicons name="logo-facebook" size={27} color="#fff" />
 						</SquircleView>
 					</TouchableOpacity>
 				</View>
@@ -233,14 +314,14 @@ export default function SignInScreen() {
 				</View>
 
 				{/* <TouchableOpacity style={{
-                    marginBottom: 20
-                }}>
-                    <Text>
-                        Vous n'avez pas de compte ? <Text style={{
-                            fontFamily: fonts.medium
-                        }}>Créez-en un</Text>
-                    </Text>
-                </TouchableOpacity> */}
+                        marginBottom: 20
+                    }}>
+                        <Text>
+                            Vous n'avez pas de compte ? <Text style={{
+                                fontFamily: fonts.medium
+                            }}>Créez-en un</Text>
+                        </Text>
+                    </TouchableOpacity> */}
 			</View>
 		</ScrollView>
 	);
@@ -260,13 +341,13 @@ const s = StyleSheet.create({
 	body: {
 		padding: 30,
 		backgroundColor: "#fff",
-		...shadow.shadowXs,
+		// ...shadow.shadowXs,
 		gap: 20,
 		borderTopLeftRadius: 40,
 		borderTopRightRadius: 40,
 	},
 	title: {
-		fontFamily: fonts.bold,
+		// fontFamily: fonts.bold,
 		fontSize: 22,
 		textAlign: "center",
 	},
@@ -280,7 +361,7 @@ const s = StyleSheet.create({
 		borderRadius: 8,
 		padding: 10,
 		fontSize: 14,
-		fontFamily: fonts.regular,
+		// fontFamily: fonts.regular,
 	},
 	socialsContainer: {
 		flexDirection: "row",

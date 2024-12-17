@@ -5,11 +5,13 @@ const AuthContext = createContext<{
 	signIn: () => void;
 	signOut: () => void;
 	session?: string | null;
+    setSession: (session: string) => void;
 	isLoading: boolean;
 }>({
 	signIn: () => null,
 	signOut: () => null,
 	session: null,
+    setSession: (session) => null,
 	isLoading: false,
 });
 
@@ -33,6 +35,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 				signOut: () => {
 					setSession(null);
 				},
+                setSession,
 				session,
 				isLoading,
 			}}
