@@ -1,11 +1,12 @@
 import { useEffect, useCallback, useReducer } from "react";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-type UseStateHook<T> = [[boolean, T | null], (value: T | null) => void];
+type UseStateHook<T> = [T | null, (value: T | null) => void];
 
-function useAsyncState<T>(initialValue: [boolean, T | null] = [true, null]): UseStateHook<T> {
-	return useReducer((state: [boolean, T | null], action: T | null = null): [boolean, T | null] => [false, action], initialValue) as UseStateHook<T>;
+function useAsyncState<T>(initialValue: T | null = null): UseStateHook<T> {
+	return useReducer((state: T | null, action: T | null = null): T | null => action, initialValue) as UseStateHook<T>;
 }
 
 export async function setStorageItemAsync(key: string, value: string | null) {
@@ -21,39 +22,60 @@ export async function setStorageItemAsync(key: string, value: string | null) {
 		}
 	} else {
 		if (value == null) {
-			await SecureStore.deleteItemAsync(key);
+            await AsyncStorage.removeItem(key);
+			// await SecureStore.deleteItemAsync(key);
 		} else {
-			await SecureStore.setItemAsync(key, value);
+            await AsyncStorage.setItem(key, value)
+			// await SecureStore.setItemAsync(key, value);
 		}
 	}
 }
 
-export function useStorageState(key: string): UseStateHook<string> {
+export function useStorageState<T>(key: string): UseStateHook<T> {
 	// Public
-	const [state, setState] = useAsyncState<string>();
+	const [state, setState] = useAsyncState<T | null>(null);
 
 	// Get
-	useEffect(() => {
+    useEffect(() => {
 		if (Platform.OS === "web") {
 			try {
 				if (typeof localStorage !== "undefined") {
-					setState(localStorage.getItem(key));
+					const storedValue = localStorage.getItem(key);
+					if (storedValue !== null) {
+						setState(JSON.parse(storedValue) as T);
+					} else {
+						setState(null);
+					}
 				}
 			} catch (e) {
 				console.error("Local storage is unavailable:", e);
+				setState(null);
 			}
 		} else {
-			SecureStore.getItemAsync(key).then((value) => {
-				setState(value);
-			});
+            AsyncStorage.getItem(key, (error, value) => {
+                if (value !== null && !!value) {
+					setState(JSON.parse(value) as T);
+				} else {
+					setState(null);
+				}
+            });
+			// SecureStore.getItemAsync(key).then((value) => {
+			// 	if (value !== null) {
+			// 		setState(JSON.parse(value) as T);
+			// 	} else {
+			// 		setState(null);
+			// 	}
+			// });
 		}
 	}, [key]);
 
+
 	// Set
-	const setValue = useCallback(
-		(value: string | null) => {
+    const setValue = useCallback(
+		(value: T | null) => {
 			setState(value);
-			setStorageItemAsync(key, value);
+			const serializedValue = value !== null ? JSON.stringify(value) : null;
+			setStorageItemAsync(key, serializedValue);
 		},
 		[key]
 	);

@@ -1,18 +1,40 @@
 import { useContext, createContext, type PropsWithChildren } from "react";
 import { useStorageState } from "./useStorageState";
+import { Session } from "@supabase/supabase-js";
+
+export type Profile = {
+    id: string;
+    first_name: string;
+    last_name: string;
+    completed: boolean;
+    image_url?: string;
+};
+
+export type TransportNetwork = {
+    id: string;
+    name: string;
+    image_name: string;
+    matricule: string;
+};
 
 const AuthContext = createContext<{
 	signIn: () => void;
 	signOut: () => void;
-	session?: string | null;
-    setSession: (session: string) => void;
-	isLoading: boolean;
+	session?: Session | null;
+    setSession: (value: Session | null) => void;
+    profile: Profile | null;
+    setProfile: (value: Profile) => void;
+    selectedTransportNetwork: TransportNetwork | null;
+    setSelectedTransportNetwork: (value: TransportNetwork) => void;
 }>({
-	signIn: () => null,
-	signOut: () => null,
+	signIn: () => {},
+	signOut: () => {},
 	session: null,
-    setSession: (session) => null,
-	isLoading: false,
+    setSession: () => {},
+    profile: null,
+    setProfile: () => {},
+    selectedTransportNetwork: null,
+    setSelectedTransportNetwork: () => {}
 });
 
 // This hook can be used to access the user info.
@@ -23,21 +45,25 @@ export function useSession() {
 }
 
 export function SessionProvider({ children }: PropsWithChildren) {
-	const [[isLoading, session], setSession] = useStorageState("session");
+	const [session, setSession] = useStorageState<Session>("session");
+	const [profile, setProfile] = useStorageState<Profile>("profile");
+	const [selectedTransportNetwork, setSelectedTransportNetwork] = useStorageState<TransportNetwork>("selectedTransportNetwork");
 
 	return (
 		<AuthContext.Provider
 			value={{
-				signIn: () => {
-					// Perform sign-in logic here
-					setSession("xxx");
-				},
+				signIn: () => {},
 				signOut: () => {
 					setSession(null);
+                    setProfile(null);
+                    setSelectedTransportNetwork(null);
 				},
-                setSession,
 				session,
-				isLoading,
+                setSession,
+                profile,
+                setProfile,
+                selectedTransportNetwork,
+                setSelectedTransportNetwork
 			}}
 		>
 			{children}

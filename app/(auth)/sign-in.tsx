@@ -1,26 +1,26 @@
-import { useSession } from "@/hooks/useSession";
-import { router, useRouter } from "expo-router";
-
-import React, { useContext, useEffect, useState } from "react";
-import { Alert, Image, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { TransportNetwork, useSession } from "@/hooks/useSession";
+import { Redirect, useRouter } from "expo-router";
+import React, { useState } from "react";
+import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as Application from "expo-application";
 import * as Haptics from "expo-haptics";
-import { SquircleView } from "expo-squircle-view";
-import Button from "../../components/Button";
 import { Ionicons } from "@expo/vector-icons";
-import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/utils/supabase";
 import { makeRedirectUri } from "expo-auth-session";
 import { openAuthSessionAsync } from "expo-web-browser";
 import * as WebBrowser from "expo-web-browser";
-import { useStorageState } from "@/hooks/useStorageState";
+import { SquircleView } from "react-native-figma-squircle";
+
+type UserTransportNetwork = {
+    transport_network: TransportNetwork;
+};
 
 WebBrowser.maybeCompleteAuthSession();
 
 const redirectUri = makeRedirectUri();
 
 export default function SignInScreen() {
-	const { setSession, signIn } = useSession();
+	const { session, setSession, setProfile, setSelectedTransportNetwork } = useSession();
     const router = useRouter();
 
 	const logo = require("../../assets/images/icon.png");
@@ -29,32 +29,15 @@ export default function SignInScreen() {
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 
-	// const appleOAuth = useOAuth({ strategy: "oauth_apple" });
-	// const googleOAuth = useOAuth({ strategy: "oauth_google" });
-	// const facebookOAuth = useOAuth({ strategy: "oauth_facebook" });
-
-	// const onPressOAuth = React.useCallback(async (OAuth) => {
-	const onPressOAuth = React.useCallback(async () => {
-		// try {
-		// 	const { createdSessionId, signIn, signUp, setActive } = await OAuth.startOAuthFlow();
-		// 	if (createdSessionId) {
-		// 		await setActive({ session: createdSessionId });
-		// 		Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-		// 	}
-		// } catch (err) {
-		// 	console.error("OAuth error", JSON.stringify(err, null, 2));
-		// }
-	}, []);
-
 	const handleGitHubSignIn = async () => {
+		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+
 		try {
 			// 1. Récupérer l'URL d'authentification pour GitHub via Supabase
 			const { data, error } = await supabase.auth.signInWithOAuth({
 				provider: "github",
 				options: { redirectTo: redirectUri },
 			});
-
-			console.log(redirectUri);
 
 			if (error) {
 				console.error("Erreur lors de l’authentification :", error.message);
@@ -88,11 +71,28 @@ export default function SignInScreen() {
 				const {data: {session}, error} = await supabase.auth.getSession();
 				if (error) throw error;
 
-                setSession(JSON.stringify(session));
-                console.log("ma session", session);
+                const { data: dataProfile, error: errorProfile } = await supabase.from('profiles').select().eq('id', session.user.id).single();
+                if (error) throw new Error(errorProfile?.message);
+
+                const { data: dataSelectedTransportNetwork, error: errorSelectedTransportNetwork } = await supabase.from('user_transport_network').select('transport_network(id, name, image_name), matricule').eq('user_id', session.user.id).eq('current', true).single();
+                if (error) throw new Error(errorSelectedTransportNetwork?.message);
+
+                setSession(session);
+                setProfile(dataProfile);
                 
+                if(dataSelectedTransportNetwork) {
+                    setSelectedTransportNetwork({
+                        // @ts-ignore
+                        id: dataSelectedTransportNetwork.transport_network.id,
+                        // @ts-ignore
+                        name: dataSelectedTransportNetwork.transport_network.name,
+                        // @ts-ignore
+                        image_name: dataSelectedTransportNetwork.transport_network.image_name,
+                        matricule: dataSelectedTransportNetwork.matricule,
+                    });
+                }
                 
-                router.replace('/(app)');
+                router.replace('/(main)');
 			} else {
 				console.log("Authentification annulée ou échouée.");
 			}
@@ -103,7 +103,6 @@ export default function SignInScreen() {
 
 	const onPressAppleOAuth = () => {
 		// onPressOAuth(appleOAuth);
-		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
 	};
 
 	const onPressGoogleOAuth = () => {
@@ -156,7 +155,7 @@ export default function SignInScreen() {
 				/>
 				<Text
 					style={{
-						// fontFamily: fonts.bold,
+                        fontWeight: 'bold',
 						fontSize: 22,
 						color: "#123c5b",
 					}}
@@ -212,7 +211,7 @@ export default function SignInScreen() {
 					style={{
 						textAlign: "center",
 						color: "#1F1F1F",
-						// fontFamily: fonts.medium,
+                        fontWeight: 600,
 						fontSize: 16,
 						marginTop: 20,
 					}}
@@ -258,11 +257,11 @@ export default function SignInScreen() {
 						/> */}
 
 					<TouchableOpacity onPress={() => handleGitHubSignIn()}>
-						<SquircleView style={s.socialBtnBody} cornerSmoothing={70} borderRadius={18} backgroundColor="#000">
+						<SquircleView style={s.socialBtnBody} squircleParams={{ cornerSmoothing: 0.7, cornerRadius: 18}}>
 							<Ionicons name="logo-github" size={34} color="#fff" />
 						</SquircleView>
 					</TouchableOpacity>
-					<TouchableOpacity onPress={onPressAppleOAuth}>
+					{/* <TouchableOpacity onPress={onPressAppleOAuth}>
 						<SquircleView style={s.socialBtnBody} cornerSmoothing={70} borderRadius={18} backgroundColor="#000">
 							<Ionicons name="logo-apple" size={34} color="#fff" />
 						</SquircleView>
@@ -276,7 +275,7 @@ export default function SignInScreen() {
 						<SquircleView style={s.socialBtnBody} cornerSmoothing={70} borderRadius={18} backgroundColor="#1877F2">
 							<Ionicons name="logo-facebook" size={27} color="#fff" />
 						</SquircleView>
-					</TouchableOpacity>
+					</TouchableOpacity> */}
 				</View>
 
 				<View
@@ -341,13 +340,12 @@ const s = StyleSheet.create({
 	body: {
 		padding: 30,
 		backgroundColor: "#fff",
-		// ...shadow.shadowXs,
 		gap: 20,
 		borderTopLeftRadius: 40,
 		borderTopRightRadius: 40,
 	},
 	title: {
-		// fontFamily: fonts.bold,
+        fontWeight: 'bold',
 		fontSize: 22,
 		textAlign: "center",
 	},
@@ -361,7 +359,6 @@ const s = StyleSheet.create({
 		borderRadius: 8,
 		padding: 10,
 		fontSize: 14,
-		// fontFamily: fonts.regular,
 	},
 	socialsContainer: {
 		flexDirection: "row",

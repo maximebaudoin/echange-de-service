@@ -1,14 +1,24 @@
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { StyleProp, StyleSheet, Text, TouchableOpacity, ViewStyle } from "react-native";
 import { useColorScheme } from "../hooks/useColorScheme";
+import { ReactNode } from "react";
+import { SquircleView } from "react-native-figma-squircle";
 
 const Button = ({
-    onPress,
-    variant,
-    style, 
-    prevIcon: PrevIcon,
-    nextIcon: NextIcon,
+    onPress = () => {},
+    variant = 'primary',
+    style = {}, 
+    prevIcon: PrevIcon = false,
+    nextIcon: NextIcon = false,
     disabled = false,
     children
+}: {
+    onPress?: () => void,
+    variant?: "secondary" | "primary" | "danger",
+    style?: StyleProp<ViewStyle>,
+    prevIcon?: any,
+    nextIcon?: any,
+    disabled?: boolean,
+    children: ReactNode
 }) => {
 	const colorScheme = useColorScheme();
 
@@ -17,7 +27,7 @@ const Button = ({
 			if (disabled) {
 				return colorScheme == "light" ? "#CCCCCC" : "#505050";
 			} else {
-				return colorScheme == "light" ? "#1F1F1F" : "#FAFAFA";
+				return colorScheme == "light" ? "#00B2FF" : "#FAFAFA";
 			}
 		}
 		if (disabled) {
@@ -32,7 +42,7 @@ const Button = ({
 			if (disabled) {
 				return colorScheme == "light" ? "#FAFAFA" : "#282828";
 			} else {
-				return colorScheme == "light" ? "#FAFAFA" : "#303030";
+				return colorScheme == "light" ? "#00B2FF22" : "#303030";
 			}
 		}
 		if (variant === "danger") {
@@ -41,18 +51,20 @@ const Button = ({
 			}
 		}
 		if (disabled) {
-			return colorScheme == "light" ? "#DDDDDD" : "#282828";
+			return colorScheme == "light" ? "#DDDDDD" : "#DDDDDD";
 		} else {
-			return "#123c5b";
+			return "#00B2FF";
 		}
 	};
 
 	return (
-		<TouchableOpacity onPress={disabled ? () => {} : onPress} style={[variant === "secondary" ? s.secondary : variant === "danger" ? s.danger : s.btn, disabled && (variant === "secondary" ? s.secondaryDisabled : s.disabled), { backgroundColor: backgroundColor() }, style]} disabled={disabled}>
-			{PrevIcon && <PrevIcon fill={textColor()} width={18} height={18} />}
-			{children && <Text style={[{ color: textColor() }, variant === "secondary" ? s.btnSecondaryText : s.btnText]}>{children}</Text>}
-			{NextIcon && <NextIcon fill={textColor()} width={18} height={18} />}
-		</TouchableOpacity>
+        <SquircleView squircleParams={{ cornerSmoothing: 1, cornerRadius: variant === "secondary" ? 13 : 16, fillColor: backgroundColor(), strokeWidth: variant === "secondary" ? 1.5 : 0, strokeColor: '#00B2FF33' }}>
+            <TouchableOpacity onPress={disabled ? () => {} : onPress} style={[s.btn, variant === "secondary" && s.btnSecondary, style]} disabled={disabled}>
+                {PrevIcon && <PrevIcon fill={textColor()} width={18} height={18} />}
+                {children && <Text style={[{ color: textColor() }, variant === "secondary" ? s.btnSecondaryText : s.btnText]}>{children}</Text>}
+                {NextIcon && <NextIcon fill={textColor()} width={18} height={18} />}
+            </TouchableOpacity>
+        </SquircleView>
 	);
 };
 
@@ -61,52 +73,24 @@ export default Button;
 const s = StyleSheet.create({
 	btn: {
 		paddingHorizontal: 20,
-		paddingVertical: 13,
-		borderRadius: 8,
-		...shadow.shadowMd,
-		backgroundColor: "#123c5b",
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",
 		gap: 13,
+        height: 50
 	},
-	secondary: {
-		paddingHorizontal: 20,
-		paddingVertical: 13,
-		borderRadius: 8,
-		...shadow.shadowSm,
-		backgroundColor: "#FAFAFA",
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "center",
-		gap: 13,
-	},
-	danger: {
-		paddingHorizontal: 20,
-		paddingVertical: 13,
-		borderRadius: 8,
-		...shadow.shadowSm,
-		backgroundColor: "#d44a5b",
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "center",
-		gap: 13,
-	},
-	secondaryDisabled: {
-		shadowOpacity: 0,
-	},
-	disabled: {
-		backgroundColor: "#ddd",
-		shadowOpacity: 0,
-	},
+    btnSecondary: {
+		paddingHorizontal: 15,
+        height: 38,
+    },
 	btnText: {
-		fontSize: 14,
-		fontFamily: fonts.bold,
+		fontSize: 18,
+        fontWeight: 600,
 		textAlign: "center",
 	},
 	btnSecondaryText: {
-		fontFamily: fonts.medium,
-		fontSize: 14,
+		fontSize: 16,
+        fontWeight: 700,
 		textAlign: "center",
 	},
 });
