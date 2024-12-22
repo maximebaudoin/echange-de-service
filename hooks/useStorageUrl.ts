@@ -1,7 +1,7 @@
 import { supabase } from "@/utils/supabase";
 import { useState } from "react";
 
-export function useImageUrl(
+export function useStorageUrl(
     bucketName: "profiles" | "transport_network",
     name: string | undefined,
     width?: number,
@@ -14,7 +14,7 @@ export function useImageUrl(
         return url;
     }
 
-    const getImageUrl = async () => {
+    const getStorageUrl = async () => {
         const { data } = await supabase.storage.from(bucketName).createSignedUrl(name, 60, {
             transform: {
                 width: width ?? undefined,
@@ -28,7 +28,7 @@ export function useImageUrl(
         }
     }
 
-    getImageUrl();
+    getStorageUrl();
 
     return url;
 }

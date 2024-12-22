@@ -8,7 +8,7 @@ import { useRef, useState } from "react";
 import Button from "@/components/Button";
 import SelectorBetweenValues from "@/components/SelectorBetweenValues";
 import { PostType, postTypes } from "@/constants/PostType";
-import Animated, { BounceIn, FadeIn, FadeInDown, FadeInLeft, FadeInRight, FadeInUp, FadeOut, FadeOutDown, FadeOutRight, FadeOutUp, SlideInLeft } from "react-native-reanimated";
+import Animated, { BounceIn, FadeIn, FadeInDown, FadeInLeft, FadeInRight, FadeInUp, FadeOut, FadeOutDown, FadeOutRight, FadeOutUp, LinearTransition, SlideInLeft, SlideOutRight } from "react-native-reanimated";
 import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "@/utils/supabase";
 import { v4 as uuidv4 } from "uuid";
@@ -95,7 +95,7 @@ const NewPostScreen = () => {
                     const base64 = await FileSystem.readAsStringAsync(attachment.uri, {
                         encoding: FileSystem.EncodingType.Base64,
                     });
-                    const name = uuidv4();
+                    const name = uuidv4()+'.pdf';
 
 					const { data: dataUpload, error: errorUpload } = await supabase.storage.from("posts").upload(name, decode(base64), {
 						contentType: attachment.mimeType,
@@ -105,11 +105,11 @@ const NewPostScreen = () => {
                         continue;
                     }
 
-                    attachmentsNames.push(name+'.pdf');
+                    attachmentsNames.push(name);
 				}
 			}
 
-            const { data, error } = await supabase.from("post").insert({
+            const { error } = await supabase.from("post").insert({
                 user_id: profile?.id,
                 transport_network_id: selectedTransportNetwork?.id,
                 text: textValue,
@@ -137,10 +137,7 @@ const NewPostScreen = () => {
                 setFormIsLoading(false);
             }, 500);
 		}
-	};
-
-    console.log(formIsLoading);
-    
+	};    
 
 	return (
 		<AppView style={{ padding: 16, gap: 16 }} edges={["top", "left", "right", "bottom"]} keyboardAvoidingView={true}>
@@ -171,21 +168,21 @@ const NewPostScreen = () => {
 					{!!attachments.length && (
 						<View style={{ gap: 16 }}>
 							{attachments.map((attachment, index) => (
-								<View key={index} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 2, borderColor: "#00B2FF55", padding: 10, borderRadius: 12, borderStyle: "dashed" }}>
+								<Animated.View layout={LinearTransition} entering={FadeInLeft.delay(200)} exiting={FadeOutRight} key={index} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 2, borderColor: "#00B2FF55", padding: 10, borderRadius: 12, borderStyle: "dashed" }}>
 									{attachment === null && <Button onPress={() => handleSelectAttachment(index)} disabled={formIsLoading}>Sélectionner</Button>}
 									{attachment !== null && <Text>{attachment.name}</Text>}
 									<Button onPress={() => handleRemoveAttachment(index)} variant="secondary" disabled={formIsLoading}>
 										<SymbolView name="xmark" tintColor="#00B2FF" weight="bold" />
 									</Button>
-								</View>
+								</Animated.View>
 							))}
 						</View>
 					)}
-					<View>
+					<Animated.View layout={LinearTransition}>
 						<Button onPress={handleAddAttachment} variant="secondary" disabled={attachments[attachments.length - 1] === null || formIsLoading}>
 							Ajouter
 						</Button>
-					</View>
+					</Animated.View>
 				</View>
 			</ScrollView>
 			<Button onPress={handleSubmit} disabled={emptyForm || formIsLoading}>

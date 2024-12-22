@@ -1,4 +1,4 @@
-import { useImageUrl } from "@/hooks/useImageUrl";
+import { useStorageUrl } from "@/hooks/useStorageUrl";
 import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/utils/supabase";
 import { router, useSegments } from "expo-router";
@@ -12,7 +12,7 @@ import { tabs } from "@/constants/Tabs";
 const AppHeader = () => {
 	const segments = useSegments();
 	const { profile, setProfile, selectedTransportNetwork, signOut } = useSession();
-	const selectedTransportNetworkImageUrl = useImageUrl("transport_network", selectedTransportNetwork?.image_name, 50, 50, "contain");
+	const selectedTransportNetworkImageUrl = useStorageUrl("transport_network", selectedTransportNetwork?.image_name, 50, 50, "contain");
 
 	let title = "";
 
@@ -64,7 +64,7 @@ const AppHeader = () => {
 					{selectedTransportNetwork.matricule}
 				</Text>
 			</View>
-			<View style={{ flex: 1, alignItems: 'flex-end', flexDirection: 'row' }}>
+			<View style={{ flex: 1, justifyContent: 'flex-end', flexDirection: 'row' }}>
 				<Pressable
 					style={{
 						borderRadius: 99,

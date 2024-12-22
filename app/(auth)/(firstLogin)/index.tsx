@@ -161,6 +161,7 @@ export default function SelectTransportNetworkScreen() {
                     {isLoaded ? (
                         transportsNetworks.map(item => (
                             <TransportNetworkButton
+                                key={item.id}
                                 id={item.id}
                                 imageUrl={item.image_url}
                                 name={item.name}

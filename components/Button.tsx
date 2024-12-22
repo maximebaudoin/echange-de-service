@@ -2,14 +2,15 @@ import { StyleProp, StyleSheet, Text, TouchableOpacity, ViewStyle } from "react-
 import { useColorScheme } from "../hooks/useColorScheme";
 import { ReactNode } from "react";
 import { SquircleView } from "react-native-figma-squircle";
+import { SFSymbol, SymbolView } from "expo-symbols";
 
 const Button = ({
     onPress = () => {},
     variant = 'primary',
     size = 'md',
     style = {}, 
-    prevIcon: PrevIcon = false,
-    nextIcon: NextIcon = false,
+    prevIconName = false,
+    nextIconName = false,
     disabled = false,
     children
 }: {
@@ -17,8 +18,8 @@ const Button = ({
     variant?: "secondary" | "primary" | "danger",
     size?: "md" | "xs",
     style?: StyleProp<ViewStyle>,
-    prevIcon?: any,
-    nextIcon?: any,
+    prevIconName?: SFSymbol | false,
+    nextIconName?: SFSymbol | false,
     disabled?: boolean,
     children: ReactNode
 }) => {
@@ -77,9 +78,9 @@ const Button = ({
 	return (
         <SquircleView squircleParams={{ cornerSmoothing: 1, cornerRadius: variant === "secondary" ? 13 : 16, fillColor: backgroundColor(), strokeWidth: variant === "secondary" ? 1.5 : 0, strokeColor: borderColor() }}>
             <TouchableOpacity onPress={disabled ? () => {} : onPress} style={[s.btn, variant === "secondary" && s.btnSecondary, style]} disabled={disabled}>
-                {PrevIcon && <PrevIcon fill={textColor()} width={18} height={18} />}
+                {prevIconName && <SymbolView tintColor={textColor()} size={21} name={prevIconName} weight="semibold" />}
                 {children && <Text style={[{ color: textColor() }, variant === "secondary" ? s.btnSecondaryText : s.btnText]}>{children}</Text>}
-                {NextIcon && <NextIcon fill={textColor()} width={18} height={18} />}
+                {nextIconName && <SymbolView tintColor={textColor()} size={21} name={nextIconName} weight="semibold" />}
             </TouchableOpacity>
         </SquircleView>
 	);
@@ -93,7 +94,7 @@ const s = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",
-		gap: 13,
+		gap: 6,
         height: 50
 	},
     btnSecondary: {

@@ -1,9 +1,6 @@
-import { ActivityIndicator, Alert, Text } from "react-native";
 import { Redirect, Stack } from "expo-router";
 import { useSession } from "@/hooks/useSession";
-import { useEffect, useState } from "react";
-import { supabase } from "@/utils/supabase";
-import { Session } from "@supabase/supabase-js";
+import { PostProvider } from "@/hooks/usePosts";
 
 export default function AppLayout() {
 	const { session, profile } = useSession();
@@ -16,9 +13,11 @@ export default function AppLayout() {
         return <Redirect href="/(auth)/(firstLogin)" />;
     }
 
-	return <Stack initialRouteName="(tabs)">
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="conversations" options={{ headerShown: false }} />
-        <Stack.Screen name="posts/new" options={{ headerShown: false }} />
-    </Stack>;
+	return <PostProvider>
+        <Stack initialRouteName="(tabs)">
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="conversations" options={{ headerShown: false }} />
+            <Stack.Screen name="posts/new" options={{ headerShown: false }} />
+        </Stack>
+    </PostProvider>;
 }

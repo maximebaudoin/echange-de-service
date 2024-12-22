@@ -25,7 +25,7 @@ const AppViewContent = ({ children }: ViewProps) => {
 					elevation: 3,
 				}}
 			>
-				<View style={{ flex: 1 }}>{children}</View>
+				<View style={{ flex: 1, borderRadius: 35, overflow: 'hidden' }}>{children}</View>
 			</SquircleView>
 		</View>
 	);
