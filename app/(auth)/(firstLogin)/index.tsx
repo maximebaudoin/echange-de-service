@@ -1,5 +1,5 @@
 import Button from "@/components/Button";
-import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase";
 import * as Haptics from "expo-haptics";
@@ -119,51 +119,47 @@ export default function SelectTransportNetworkScreen() {
     }
 
 	return (
-		<View style={{ flex: 1, justifyContent: "center", alignItems: "stretch", backgroundColor: "#F8F8F8" }}>
+		<KeyboardAvoidingView style={{ flex: 1, justifyContent: "center", alignItems: "stretch", backgroundColor: "#F8F8F8" }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <SafeAreaView edges={['top']} style={{ paddingHorizontal: 16 }}>
                 <Steps current={0} />
             </SafeAreaView>
-            <View style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", paddingHorizontal: 24 }}>
-                <Image
-                    source={logo}
-                    style={{
-                        width: 100,
-                        height: 100,
-                        marginBottom: 16,
-                    }}
-                />
-                <Text
-                    style={{
-                        fontWeight: "bold",
-                        fontSize: 28,
-                        color: "#000",
-                        marginBottom: 8,
-                        textAlign: 'center'
-                    }}
-                >
-                    Choix du réseau de transport
-                </Text>
-                <Text
-                    style={{
-                        fontWeight: "light",
-                        fontSize: 15,
-                        color: "#000",
-                        opacity: 0.36,
-                        textAlign: 'center'
-                    }}
-                >
-                    Sélectionnez votre réseau de transport ainsi que votre matricule.
-                </Text>
-            </View>
-            <View style={{ height: "60%", padding: 24, paddingBottom: 42, alignItems: "stretch" }}>
-                {/* <TextInput style={{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 16, borderRadius: 12, height: 40, paddingHorizontal: 12 }} placeholder="Recherche..." placeholderTextColor="#00000020" /> */}
-                {isLoaded ? (
-                    <FlatList
-                        keyboardShouldPersistTaps='handled'
-                        data={transportsNetworks}
-                        style={{ flex: 1 }}
-                        contentContainerStyle={{ paddingTop: 16, gap: 12 }}
-                        renderItem={({ item }) => (
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
+                <View style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", paddingHorizontal: 24 }}>
+                    <Image
+                        source={logo}
+                        style={{
+                            width: 100,
+                            height: 100,
+                            marginBottom: 16,
+                        }}
+                    />
+                    <Text
+                        style={{
+                            fontWeight: "bold",
+                            fontSize: 28,
+                            color: "#000",
+                            marginBottom: 8,
+                            textAlign: 'center'
+                        }}
+                    >
+                        Choix du réseau de transport
+                    </Text>
+                    <Text
+                        style={{
+                            fontWeight: "light",
+                            fontSize: 15,
+                            color: "#000",
+                            opacity: 0.36,
+                            textAlign: 'center'
+                        }}
+                    >
+                        Sélectionnez votre réseau de transport ainsi que votre matricule.
+                    </Text>
+                </View>
+                <View style={{ height: "60%", padding: 24, alignItems: "stretch", gap: 12 }}>
+                    {/* <TextInput style={{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 16, borderRadius: 12, height: 40, paddingHorizontal: 12 }} placeholder="Recherche..." placeholderTextColor="#00000020" /> */}
+                    {isLoaded ? (
+                        transportsNetworks.map(item => (
                             <TransportNetworkButton
                                 id={item.id}
                                 imageUrl={item.image_url}
@@ -173,17 +169,19 @@ export default function SelectTransportNetworkScreen() {
                                 matriculeValue={matriculeValue ?? ''}
                                 setMatriculeValue={setMatriculeValue}
                             />
-                        )}
-                    />
-                ) : (
-                    <View style={{ flex: 1, padding: 16 }}>
-                        <ActivityIndicator size="large" />
-                    </View>
-                )}
+                        ))
+                    ) : (
+                        <View style={{ flex: 1, padding: 16 }}>
+                            <ActivityIndicator size="large" />
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
+            <SafeAreaView edges={["left", "right", "bottom"]} style={{ paddingHorizontal: 16 }}>
                 <Button onPress={handlePressNext} disabled={selectedTransportNetwork === null || matriculeValue === "" || nextIsLoading}>
                     {nextIsLoading ? <ActivityIndicator color="white" /> : "Suivant"}
                 </Button>
-            </View>
-		</View>
+			</SafeAreaView>
+		</KeyboardAvoidingView>
 	);
 }

@@ -6,6 +6,7 @@ import { SquircleView } from "react-native-figma-squircle";
 const Button = ({
     onPress = () => {},
     variant = 'primary',
+    size = 'md',
     style = {}, 
     prevIcon: PrevIcon = false,
     nextIcon: NextIcon = false,
@@ -14,6 +15,7 @@ const Button = ({
 }: {
     onPress?: () => void,
     variant?: "secondary" | "primary" | "danger",
+    size?: "md" | "xs",
     style?: StyleProp<ViewStyle>,
     prevIcon?: any,
     nextIcon?: any,
@@ -28,6 +30,21 @@ const Button = ({
 				return colorScheme == "light" ? "#CCCCCC" : "#505050";
 			} else {
 				return colorScheme == "light" ? "#00B2FF" : "#FAFAFA";
+			}
+		}
+		if (disabled) {
+			return colorScheme == "light" ? "#FFFFFF" : "#808080";
+		} else {
+			return "#FFFFFF";
+		}
+	};
+
+    const borderColor = () => {
+		if (variant === "secondary") {
+			if (disabled) {
+				return colorScheme == "light" ? "#CCCCCC" : "#505050";
+			} else {
+				return colorScheme == "light" ? "#00B2FF33" : "#FAFAFA";
 			}
 		}
 		if (disabled) {
@@ -58,7 +75,7 @@ const Button = ({
 	};
 
 	return (
-        <SquircleView squircleParams={{ cornerSmoothing: 1, cornerRadius: variant === "secondary" ? 13 : 16, fillColor: backgroundColor(), strokeWidth: variant === "secondary" ? 1.5 : 0, strokeColor: '#00B2FF33' }}>
+        <SquircleView squircleParams={{ cornerSmoothing: 1, cornerRadius: variant === "secondary" ? 13 : 16, fillColor: backgroundColor(), strokeWidth: variant === "secondary" ? 1.5 : 0, strokeColor: borderColor() }}>
             <TouchableOpacity onPress={disabled ? () => {} : onPress} style={[s.btn, variant === "secondary" && s.btnSecondary, style]} disabled={disabled}>
                 {PrevIcon && <PrevIcon fill={textColor()} width={18} height={18} />}
                 {children && <Text style={[{ color: textColor() }, variant === "secondary" ? s.btnSecondaryText : s.btnText]}>{children}</Text>}

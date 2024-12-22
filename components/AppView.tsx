@@ -1,17 +1,27 @@
 import { PropsWithChildren } from "react";
-import { View, ViewProps } from "react-native";
+import { KeyboardAvoidingView, Platform, View, ViewProps } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface AppViewProps extends ViewProps {
-    edges: ('top' | 'right' | 'bottom' | 'left')[]
+    edges?: ('top' | 'right' | 'bottom' | 'left')[];
+    keyboardAvoidingView?: boolean;
 }
 
-const AppView = ({ children, style, edges = ['top', 'left', 'right'] }: AppViewProps) => {
-    return (
+const AppView = ({ children, style, edges = ['top', 'left', 'right'], keyboardAvoidingView = false }: AppViewProps) => {
+    
+    const body = (
         <SafeAreaView style={[{ flex: 1 }, style]} edges={edges}>
             {children}
         </SafeAreaView>
-    );
+    );    
+
+    if(keyboardAvoidingView) {
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            {body}
+        </KeyboardAvoidingView>
+    }
+    
+    return body;
 }
  
 export default AppView;

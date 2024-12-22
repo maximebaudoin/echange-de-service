@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import Button from "@/components/Button";
-import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/utils/supabase";
 import * as Haptics from "expo-haptics";
@@ -66,8 +66,6 @@ export default function UserInfosScreen() {
 	};
 
 	const handleSelectImage = async () => {
-		setSelectImageIsLoading(true);
-
 		try {
             if(!profile) {
                 throw new Error("Unable to access the profile variable");
@@ -88,6 +86,8 @@ export default function UserInfosScreen() {
 			if (!assets[0].base64) {
 				throw new Error("Unable to access the base64 version of selected asset");
 			}
+
+		    setSelectImageIsLoading(true);
 
 			const { data: dataUpload, error: errorUpload } = await supabase.storage.from("profiles").upload(uuidv4(), decode(assets[0].base64), {
 				contentType: "image/png",
@@ -125,53 +125,56 @@ export default function UserInfosScreen() {
 	};
 
 	return (
-		<View style={{ flex: 1, justifyContent: "center", alignItems: "stretch", backgroundColor: "#F8F8F8" }}>
+		<KeyboardAvoidingView style={{ flex: 1, justifyContent: "center", alignItems: "stretch", backgroundColor: "#F8F8F8" }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
 			<SafeAreaView edges={["top"]} style={{ paddingHorizontal: 16 }}>
 				<Steps current={1} />
 			</SafeAreaView>
-			<View style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", paddingHorizontal: 24 }}>
-				<Text
-					style={{
-						fontWeight: "bold",
-						fontSize: 28,
-						color: "#000",
-						marginBottom: 8,
-						textAlign: "center",
-					}}
-				>
-					Informations
-				</Text>
-				<Text
-					style={{
-						fontWeight: "light",
-						fontSize: 15,
-						color: "#000",
-						opacity: 0.36,
-						textAlign: "center",
-					}}
-				>
-					Veuillez renseigner quelques informations sur vous, ainsi que votre matricule.
-				</Text>
-			</View>
-			<View style={{ height: "70%", padding: 24, paddingBottom: 42, alignItems: "stretch" }}>
-				<View style={{ gap: 24, flex: 1 }}>
-					<View style={{ gap: 16, alignItems: "center", flexDirection: "row", justifyContent: "space-evenly", backgroundColor: "#fff", borderRadius: 18, borderWidth: 1, borderColor: "#00000020", padding: 16 }}>
-						<Image source={{ uri: profile?.image_url }} width={100} height={100} style={{ borderRadius: 10 }} />
-						<Button variant="secondary" onPress={handleSelectImage}>
-							{selectImageIsLoading ? <ActivityIndicator color={"#fff"} /> : "Modifier"}
-						</Button>
-					</View>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1, paddingBottom: 100 }}>
+                <View style={{ flex: 1, justifyContent: "flex-end", alignItems: "center", paddingHorizontal: 24 }}>
+                    <Text
+                        style={{
+                            fontWeight: "bold",
+                            fontSize: 28,
+                            color: "#000",
+                            marginBottom: 8,
+                            textAlign: "center",
+                        }}
+                    >
+                        Informations
+                    </Text>
+                    <Text
+                        style={{
+                            fontWeight: "light",
+                            fontSize: 15,
+                            color: "#000",
+                            opacity: 0.36,
+                            textAlign: "center",
+                        }}
+                    >
+                        Veuillez renseigner quelques informations sur vous, ainsi que votre matricule.
+                    </Text>
+                </View>
+                <View style={{ height: "70%", padding: 24, paddingBottom: 42, alignItems: "stretch" }}>
+                    <View style={{ gap: 24, flex: 1 }}>
+                        <View style={{ gap: 16, alignItems: "center", flexDirection: "row", justifyContent: "space-evenly", backgroundColor: "#fff", borderRadius: 18, borderWidth: 1, borderColor: "#00000020", padding: 16 }}>
+                            <Image source={{ uri: profile?.image_url }} width={100} height={100} style={{ borderRadius: 10 }} />
+                            <Button variant="secondary" onPress={handleSelectImage}>
+                                {selectImageIsLoading ? <ActivityIndicator /> : "Modifier"}
+                            </Button>
+                        </View>
 
-					<View style={{ flex: 1, gap: 8 }}>
-						<TextInput value={firstnameValue} onChangeText={setFirstnameValue} ref={firstnameInputRef} onFocus={() => setFirstnameIsFocused(true)} onBlur={() => setFirstnameIsFocused(false)} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }, firstnameIsFocused && { borderWidth: 3, borderColor: "#00B2FF", paddingHorizontal: 14 }]} placeholder="Prénom" placeholderTextColor="#00000020" />
-						<TextInput value={lastnameValue} onChangeText={setLastnameValue} ref={lastnameInputRef} onFocus={() => setLastnameIsFocused(true)} onBlur={() => setLastnameIsFocused(false)} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }, lastnameIsFocused && { borderWidth: 3, borderColor: "#00B2FF", paddingHorizontal: 14 }]} placeholder="Nom" placeholderTextColor="#00000020" />
-					</View>
-				</View>
-
-				<Button onPress={handlePressNext} disabled={firstnameValue === "" || lastnameValue === "" || nextIsLoading}>
-					{nextIsLoading ? <ActivityIndicator color="white" /> : "Suivant"}
-				</Button>
-			</View>
-		</View>
+                        <View style={{ flex: 1, gap: 8 }}>
+                            <TextInput value={firstnameValue} onChangeText={setFirstnameValue} ref={firstnameInputRef} onFocus={() => setFirstnameIsFocused(true)} onBlur={() => setFirstnameIsFocused(false)} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }, firstnameIsFocused && { borderWidth: 3, borderColor: "#00B2FF", paddingHorizontal: 14 }]} placeholder="Prénom" placeholderTextColor="#00000020" />
+                            <TextInput value={lastnameValue} onChangeText={setLastnameValue} ref={lastnameInputRef} onFocus={() => setLastnameIsFocused(true)} onBlur={() => setLastnameIsFocused(false)} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }, lastnameIsFocused && { borderWidth: 3, borderColor: "#00B2FF", paddingHorizontal: 14 }]} placeholder="Nom" placeholderTextColor="#00000020" />
+                        </View>
+                    </View>
+                </View>
+            </ScrollView>
+            <SafeAreaView edges={["left", "right", "bottom"]} style={{ paddingHorizontal: 16 }}>
+                <Button onPress={handlePressNext} disabled={firstnameValue === "" || lastnameValue === "" || nextIsLoading}>
+                    {nextIsLoading ? <ActivityIndicator color="white" /> : "Suivant"}
+                </Button>
+            </SafeAreaView>
+		</KeyboardAvoidingView>
 	);
 }

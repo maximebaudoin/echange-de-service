@@ -39,6 +39,8 @@ const AppHeader = () => {
 							borderRadius: 16,
 							borderWidth: 1,
 							borderColor: "#00000010",
+                            backgroundColor: "#fff",
+                            padding: 3
 						}}
 					/>
 				)}

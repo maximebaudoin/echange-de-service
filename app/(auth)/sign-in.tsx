@@ -69,13 +69,13 @@ export default function SignInScreen() {
 
 				// Étape 5 : Récupérer l'utilisateur
 				const {data: {session}, error} = await supabase.auth.getSession();
-				if (error) throw error;
+				if (error || !session) throw new Error('[session] '+ error?.message);
 
                 const { data: dataProfile, error: errorProfile } = await supabase.from('profiles').select().eq('id', session.user.id).single();
-                if (error) throw new Error(errorProfile?.message);
+                if (errorProfile || !dataProfile) throw new Error('[dataProfile] '+ errorProfile?.message);
 
-                const { data: dataSelectedTransportNetwork, error: errorSelectedTransportNetwork } = await supabase.from('user_transport_network').select('transport_network(id, name, image_name), matricule').eq('user_id', session.user.id).eq('current', true).single();
-                if (error) throw new Error(errorSelectedTransportNetwork?.message);
+                const { data: dataSelectedTransportNetwork, error: errorSelectedTransportNetwork } = await supabase.from('user_transport_network').select('transport_network(id, name, image_name), matricule').eq('user_id', session.user.id).eq('current', true).maybeSingle();
+                if (errorSelectedTransportNetwork) throw new Error('[dataSelectedTransportNetwork] '+ errorSelectedTransportNetwork?.message);
 
                 setSession(session);
                 setProfile(dataProfile);
@@ -92,7 +92,7 @@ export default function SignInScreen() {
                     });
                 }
                 
-                router.replace('/(main)');
+                router.replace('/(main)/(tabs)');
 			} else {
 				console.log("Authentification annulée ou échouée.");
 			}
