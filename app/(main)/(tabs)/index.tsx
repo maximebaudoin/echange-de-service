@@ -52,6 +52,10 @@ const TabsIndexScreen = () => {
                 throw new Error(errorPosts.message);
             }
 
+            if(JSON.stringify(dataPosts) === JSON.stringify(posts)) {
+                return;
+            }
+
             setPosts(dataPosts);
             setPostsDisplayed(dataPosts);
         } catch(err) {

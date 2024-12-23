@@ -15,6 +15,17 @@ import { v4 as uuidv4 } from "uuid";
 import { decode } from "base64-arraybuffer";
 import * as FileSystem from 'expo-file-system';
 import { useSession } from "@/hooks/useSession";
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+const searchValues = {
+    'service': 'Service',
+    'conge': 'Congé'
+};
+
+const contreValues = {
+    'service': 'Service',
+    'conge': 'Congé'
+};
 
 const NewPostScreen = () => {
     const { profile, selectedTransportNetwork } = useSession();
@@ -22,6 +33,8 @@ const NewPostScreen = () => {
 	const [textValue, setTextValue] = useState("");
 	const [textIsFocused, setTextIsFocused] = useState(false);
 	const [postType, setPostType] = useState<PostType>("proposition");
+	const [searchValue, setSearchValue] = useState<string | null>(null);
+	const [contreValue, setContreValue] = useState<string | null>(null);
 	const [attachments, setAttachments] = useState<(DocumentPicker.DocumentPickerAsset | null)[]>([]);
 	const [showOverflowTitle, setShowOverflowTitle] = useState(false);
 	const [formError, setFormError] = useState<false | string>(false);
@@ -147,21 +160,73 @@ const NewPostScreen = () => {
 				</Pressable>
 				{showOverflowTitle && (
 					<Animated.View entering={FadeInDown} exiting={FadeOutDown}>
-						<ThemedText type="subtitle">Nouvelle publication</ThemedText>
+						<ThemedText type="subtitle">Nouvelle annonce</ThemedText>
 					</Animated.View>
 				)}
 			</View>
 			<ScrollView onScroll={onBodyScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 16, paddingTop: 3, overflow: "visible" }} style={{ flex: 1 }}>
-				<ThemedText type="title">Nouvelle publication</ThemedText>
+				<ThemedText type="title">Nouvelle annonce</ThemedText>
+
 				<View style={{ flex: 1, gap: 16 }}>
 					{formError && (
 						<Animated.View entering={FadeInRight} exiting={FadeOutRight} style={{ padding: 16, borderRadius: 12, borderWidth: 2, borderColor: "#d44a5b", backgroundColor: "#d44a5b20" }}>
 							<Text style={{ color: "#d44a5b", fontWeight: 500 }}>{formError}</Text>
 						</Animated.View>
 					)}
-					<SelectorBetweenValues values={postTypes} value={postType} setValue={setPostType} />
-					<TextInput multiline={true} value={textValue} onChangeText={setTextValue} ref={textInputRef} onFocus={() => setTextIsFocused(true)} onBlur={() => setTextIsFocused(false)} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 300, padding: 16 }, textIsFocused && { borderWidth: 3, borderColor: "#00B2FF", padding: 14 }]} placeholder="Message" placeholderTextColor="#00000020" />
-					<View style={{ gap: 4, flexDirection: "row", alignItems: "baseline" }}>
+
+                    <View style={{ gap: 12, flexDirection: 'row', alignItems: 'center' }}>
+                        <ThemedText type="subtitle" style={{ fontWeight: 700 }}>Je cherche :</ThemedText>
+                        <SelectorBetweenValues values={searchValues} value={searchValue} setValue={setSearchValue} />
+                    </View>
+
+                    {searchValue && (
+                        <Animated.View entering={FadeInUp} exiting={FadeInDown} style={{ flexDirection: 'row', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
+                            <Animated.View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <ThemedText type="subtitle">Du :</ThemedText>
+                                <DateTimePicker mode="date" value={new Date()} />
+                            </Animated.View>
+                            <Animated.View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <ThemedText type="subtitle">au :</ThemedText>
+                                <DateTimePicker mode="date" value={new Date()} />
+                            </Animated.View>
+                        </Animated.View>
+                    )}
+
+                    {searchValue && searchValue === 'service' && <Animated.View entering={FadeInUp} exiting={FadeOutDown} style={{ gap: 16, marginBottom: 24 }}>
+                        <ThemedText type="subtitle" style={{ fontWeight: 700 }}>Mes préferences :</ThemedText>
+
+                        <View style={{ flexDirection: 'row' , alignItems: 'center', gap: 16 }}>
+                            <ThemedText type="subtitle" style={{ fontWeight: 500 }}>Ligne</ThemedText>
+                            <Button variant="secondary">Sélectionner</Button>
+                        </View>
+
+                        <View style={{ flexDirection: 'row' , alignItems: 'center', gap: 16 }}>
+                            <ThemedText type="subtitle" style={{ fontWeight: 500 }}>Type</ThemedText>
+                            <Button variant="secondary">Sélectionner</Button>
+                        </View>
+                    </Animated.View>}
+
+                    {searchValue && <Animated.View entering={FadeInUp} exiting={FadeOutDown} style={{ gap: 16 }}>
+                        <View style={{ gap: 12, flexDirection: 'row', alignItems: 'center' }}>
+                            <ThemedText type="subtitle" style={{ fontWeight: 700 }}>Contre :</ThemedText>
+                            <SelectorBetweenValues values={contreValues} value={contreValue} setValue={setContreValue} />
+                        </View>
+
+                        {contreValue && contreValue === 'service' && (<>
+                            <View style={{ flexDirection: 'row' , alignItems: 'center', gap: 16 }}>
+                                <ThemedText type="subtitle" style={{ fontWeight: 500 }}>Ligne</ThemedText>
+                                <Button variant="secondary">Sélectionner</Button>
+                            </View>
+
+                            <View style={{ flexDirection: 'row' , alignItems: 'center', gap: 16 }}>
+                                <ThemedText type="subtitle" style={{ fontWeight: 500 }}>Type</ThemedText>
+                                <Button variant="secondary">Sélectionner</Button>
+                            </View>
+                        </>)}
+                    </Animated.View>}
+					
+					{/* <TextInput multiline={true} value={textValue} onChangeText={setTextValue} ref={textInputRef} onFocus={() => setTextIsFocused(true)} onBlur={() => setTextIsFocused(false)} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 250, padding: 16 }, textIsFocused && { borderWidth: 3, borderColor: "#00B2FF", padding: 14 }]} placeholder="Précisions..." placeholderTextColor="#00000020" /> */}
+					{/* <View style={{ gap: 4, flexDirection: "row", alignItems: "baseline" }}>
 						<ThemedText type="subtitle">Pièces jointes</ThemedText>
 						<ThemedText type="small">(Service, photo, ...)</ThemedText>
 					</View>
@@ -182,7 +247,7 @@ const NewPostScreen = () => {
 						<Button onPress={handleAddAttachment} variant="secondary" disabled={attachments[attachments.length - 1] === null || formIsLoading}>
 							Ajouter
 						</Button>
-					</Animated.View>
+					</Animated.View> */}
 				</View>
 			</ScrollView>
 			<Button onPress={handleSubmit} disabled={emptyForm || formIsLoading}>
