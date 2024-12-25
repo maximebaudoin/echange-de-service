@@ -1,12 +1,8 @@
 import { useStorageUrl } from "@/hooks/useStorageUrl";
 import { useSession } from "@/hooks/useSession";
-import { supabase } from "@/utils/supabase";
 import { router, useSegments } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { SquircleView } from "react-native-figma-squircle";
-import MaskedView from "@react-native-masked-view/masked-view";
 import { tabs } from "@/constants/Tabs";
 
 const AppHeader = () => {

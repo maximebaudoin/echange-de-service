@@ -6,6 +6,7 @@ import Button from "./Button";
 import { WebView } from 'react-native-webview';
 import { useStorageUrl } from "@/hooks/useStorageUrl";
 import { useEffect, useState } from "react";
+import { useModal } from "@/hooks/useModal";
 
 const Post = ({
     index,
@@ -24,6 +25,7 @@ const Post = ({
     user_last_name: string;
     user_imag_url: string;
 }) => {
+    const { onOpen } = useModal();
     const { formatRelativeDate, getStorageUrl } = useHelpers();
 
     const [attachmentsUrls, setAttachmentsUrls] = useState<string[]>([]);
@@ -120,7 +122,7 @@ const Post = ({
                 })}
             </View>}
             <View style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
-                <Button variant="secondary" onPress={() => {}} style={{ alignItems: 'center' }} prevIconName="hand.raised.fingers.spread">
+                <Button variant="secondary" onPress={() => onOpen('interestedByPost')} style={{ alignItems: 'center' }} prevIconName="hand.raised.fingers.spread">
                     Intéréssé
                 </Button>
             </View>

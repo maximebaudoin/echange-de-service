@@ -1,6 +1,7 @@
 import AppHeader from "@/components/AppHeader";
 import AppView from "@/components/AppView";
 import AppViewContent from "@/components/AppViewContent";
+import ModalProvider from "@/components/ModalProvider";
 import { tabs } from "@/constants/Tabs";
 import { FontAwesome } from "@expo/vector-icons";
 import { Tabs, useSegments } from "expo-router";
@@ -34,8 +35,8 @@ const TabsLayout = () => {
                     />
                 </Tabs>
             </AppViewContent>
+		    <ModalProvider />
         </AppView>
-		
 	);
 };
 
