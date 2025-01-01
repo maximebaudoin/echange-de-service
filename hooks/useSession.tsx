@@ -1,21 +1,8 @@
 import { useContext, createContext, type PropsWithChildren } from "react";
 import { useStorageState } from "./useStorageState";
 import { Session } from "@supabase/supabase-js";
-
-export type Profile = {
-    id: string;
-    first_name: string;
-    last_name: string;
-    completed: boolean;
-    image_url?: string;
-};
-
-export type TransportNetwork = {
-    id: string;
-    name: string;
-    image_name: string;
-    matricule: string;
-};
+import { Profile } from "@/constants/Profile";
+import { TransportNetwork } from "@/constants/TransportNetwork";
 
 const AuthContext = createContext<{
 	signIn: () => void;

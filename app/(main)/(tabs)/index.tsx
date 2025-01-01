@@ -6,10 +6,10 @@ import { SymbolView } from "expo-symbols";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 import { SquircleView } from "react-native-figma-squircle";
 import * as Haptics from "expo-haptics";
-import { usePost } from "@/hooks/usePosts";
+import { usePosts } from "@/hooks/usePosts";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase";
-import PostComponent from "../../../components/Post";
+import PostComponent from "../../../components/PostComponent";
 import HeadingSelectorBetweenValues from "@/components/HeadingSelectorBetweenValues";
 import { PostType, postTypes } from "@/constants/PostType";
 import { Post } from "@/constants/Post";
@@ -18,7 +18,7 @@ const TabsIndexScreen = () => {
     const navigation = useNavigation();
     const { selectedTransportNetwork } = useSession();
 
-    const { posts, setPosts } = usePost();
+    const { posts, setPosts } = usePosts();
     const [postsDisplayed, setPostsDisplayed] = useState<Post[]>(posts);
 
     const [refreshing, setRefreshing] = useState(false);

@@ -61,7 +61,7 @@ const AppHeader = () => {
 				</Text>
 			</View>
 			<View style={{ flex: 1, justifyContent: 'flex-end', flexDirection: 'row' }}>
-				<Pressable
+				{/* <Pressable
 					style={{
 						borderRadius: 99,
 						backgroundColor: "#fff",
@@ -90,7 +90,7 @@ const AppHeader = () => {
 					onPress={() => setProfile({ ...profile, completed: false })}
 				>
 					<SymbolView name="pencil" tintColor="#000000DD" size={20} weight="bold" />
-				</Pressable>
+				</Pressable> */}
 				<Pressable
 					style={{
 						borderRadius: 99,

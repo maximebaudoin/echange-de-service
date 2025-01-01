@@ -15,7 +15,7 @@ export default function WelcomeScreen() {
 	const handlePressNext = async () => {
 		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
 
-        router.replace('/(main)');
+        router.replace('/(main)/(tabs)');
 	};
 
 	return (

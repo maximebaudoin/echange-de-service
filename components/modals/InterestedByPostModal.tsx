@@ -20,16 +20,16 @@ const InterestedByPostModal = () => {
             isVisible={isModalOpen}
             swipeDirection="down"
             onSwipeComplete={onClose}
-            style={{ margin: 0, padding: 8, justifyContent: 'flex-end' }}
+            style={{ margin: 0, padding: 8 }}
             hideModalContentWhileAnimating={true}
             onBackdropPress={onClose}
             avoidKeyboard
         >
             <MaskedView
-                // style={{ padding: 25, paddingBottom: 35, paddingTop: 40  }}
+                style={{ padding: 25, paddingBottom: 35, paddingTop: 40, borderWidth: 2, borderColor: '#fff'  }}
                 maskElement={
                     <SquircleView
-                        style={[StyleSheet.absoluteFill]}
+                        style={StyleSheet.absoluteFill}
                         squircleParams={{
                             cornerSmoothing: 0.7,
                             cornerRadius: 20,

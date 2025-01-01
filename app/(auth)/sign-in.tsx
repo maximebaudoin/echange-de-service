@@ -33,6 +33,9 @@ export default function SignInScreen() {
 		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
 
 		try {
+
+            console.log(redirectUri);
+            
 			// 1. Récupérer l'URL d'authentification pour GitHub via Supabase
 			const { data, error } = await supabase.auth.signInWithOAuth({
 				provider: "github",

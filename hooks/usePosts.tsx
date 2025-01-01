@@ -20,14 +20,14 @@ const PostProvider = ({
     </PostContext.Provider>;
 };
 
-const usePost = () => {
+const usePosts = () => {
 	const context = useContext(PostContext);
 
 	if (!context) {
-		throw new Error("usePost must be used within a PostContext");
+		throw new Error("usePosts must be used within a PostContext");
 	}
 
 	return context;
 };
 
-export { PostProvider, usePost };
+export { PostProvider, usePosts };
