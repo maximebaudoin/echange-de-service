@@ -1,19 +1,16 @@
 import AppView from "@/components/AppView";
-import { Post } from "@/constants/Post";
-import { PostType } from "@/constants/PostType";
-import { usePosts } from "@/hooks/usePosts";
 import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/utils/supabase";
-import { Link, router, useNavigation } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, NativeScrollEvent, NativeSyntheticEvent, Pressable, Text, View } from "react-native";
+import { FlatList, NativeScrollEvent, NativeSyntheticEvent, Pressable, View } from "react-native";
 import * as Haptics from "expo-haptics";
-import { useConversations } from "@/hooks/useConversations";
 import { Conversation } from "@/constants/Conversation";
 import ConversationComponent from "@/components/ConversationComponent";
 import { SymbolView } from "expo-symbols";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
+import { useConversations } from "@/hooks/useConversations";
 
 const ConversationsScreen = () => {
     const navigation = useNavigation();
@@ -21,7 +18,7 @@ const ConversationsScreen = () => {
 
     const { conversations, setConversations } = useConversations();
     
-    const [conversationsDisplayed, setConversationsDisplayed] = useState<Conversation[]>(conversations);
+    const [conversationsDisplayed, setConversationsDisplayed] = useState<Conversation[]>([]);
     const [refreshing, setRefreshing] = useState(false);
 	const [showOverflowTitle, setShowOverflowTitle] = useState(false);
 
@@ -68,7 +65,7 @@ const ConversationsScreen = () => {
             });
 
             // @ts-ignore
-            setConversations(filteredConversations);
+            setConversations(dataConversations);
             // @ts-ignore
             setConversationsDisplayed(filteredConversations);
         } catch(err) {
@@ -81,11 +78,6 @@ const ConversationsScreen = () => {
             }, 1000);
         }
     }, []);
-
-    // const handleNewPost = () => {
-    //     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    //     router.push('/(main)/posts/new');
-    // }
 
     const handleGoBack = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

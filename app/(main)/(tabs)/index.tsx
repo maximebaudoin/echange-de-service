@@ -34,8 +34,6 @@ const TabsIndexScreen = () => {
 
     useEffect(() => {
         const unsubscribe = navigation.addListener("focus", () => {
-            console.log(true);
-            
             refreshPosts();
         });
       

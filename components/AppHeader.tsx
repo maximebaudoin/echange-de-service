@@ -41,10 +41,11 @@ const AppHeader = () => {
 					/>
 				)}
 			</View>
-			<View style={{ flex: 1, alignItems: "center" }}>
+			<View style={{ flex: 1, alignItems: "center", marginHorizontal: -40 }}>
 				<Text
 					style={{
-						fontSize: 19,
+						fontSize: 18,
+                        textAlign: 'center',
 						fontWeight: "bold",
 					}}
 				>

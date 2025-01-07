@@ -1,5 +1,6 @@
 import { Conversation } from "@/constants/Conversation";
-import { Image, Text, View } from "react-native";
+import { router } from "expo-router";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInLeft } from "react-native-reanimated";
 
 const ConversationComponent = ({
@@ -10,13 +11,23 @@ const ConversationComponent = ({
 }: Partial<Conversation> & {
     index: number;
 }) => {
+    const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+
+    const handleOpen = () => {
+        router.push(`/conversations/${id}`);
+    }    
+
     return (
-        <Animated.View entering={FadeInLeft.delay(200+index*100)} style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-        }}>
-            <Image source={{ uri: user?.image_url }} style={{ width: 70, height: 70, borderRadius: 99 }} />
+        <AnimatedTouchableOpacity
+            entering={FadeInLeft.delay(200+index*100)}
+            onPress={handleOpen}
+            style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+            }}
+        >
+            <Image source={{ uri: user?.image_url }} style={{ width: 55, height: 55, borderRadius: 99 }} />
             <View style={{
                 gap: 2,
                 flex: 1,
@@ -38,7 +49,7 @@ const ConversationComponent = ({
                     Lorem ipsum dolor sit, amet consectetur adipisicing elit. Vitae doloremque eos ipsam esse facilis minima? Ullam, ex nisi recusandae a corrupti atque voluptate rerum, similique repellendus quas voluptates fugiat repellat.
                 </Text>
             </View>
-        </Animated.View>
+        </AnimatedTouchableOpacity>
     );
 }
  

@@ -4,6 +4,7 @@ import { PostProvider } from "@/hooks/usePosts";
 import * as Notifications from "expo-notifications";
 import { useEffect, useRef, useState } from "react";
 import { registerForPushNotificationsAsync } from "@/utils/pushNotifications";
+import { ConversationProvider } from "@/hooks/useConversations";
 
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
@@ -55,12 +56,14 @@ export default function AppLayout() {
 	}
 
 	return (
-		<PostProvider>
-			<Stack initialRouteName="(tabs)">
-				<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-				<Stack.Screen name="conversations" options={{ headerShown: false }} />
-				<Stack.Screen name="posts/new" options={{ headerShown: false }} />
-			</Stack>
-		</PostProvider>
+        <ConversationProvider>
+            <PostProvider>
+                <Stack initialRouteName="(tabs)">
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="conversations" options={{ headerShown: false }} />
+                    <Stack.Screen name="posts/new" options={{ headerShown: false }} />
+                </Stack>
+            </PostProvider>
+        </ConversationProvider>
 	);
 }

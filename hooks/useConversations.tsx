@@ -1,15 +1,9 @@
 import { Conversation } from "@/constants/Conversation";
-import { Post } from "@/constants/Post";
 import React, { createContext, useState, useContext, Dispatch, SetStateAction } from "react";
 
-interface ConversationContextType {
-    conversations: Conversation[];
-    setConversations: Dispatch<SetStateAction<Conversation[]>>;
-}
-
-const ConversationContext = createContext<ConversationContextType>({
-	conversations: [],
-	setConversations: () => {},
+const ConversationContext = createContext({
+	conversations: [] as Conversation[],
+	setConversations: {} as Dispatch<SetStateAction<Conversation[]>>,
 });
 
 const ConversationProvider = ({
