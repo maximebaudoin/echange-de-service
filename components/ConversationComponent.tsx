@@ -19,7 +19,7 @@ const ConversationComponent = ({
 
     return (
         <AnimatedTouchableOpacity
-            entering={FadeInLeft.delay(200+index*100)}
+            entering={FadeInLeft.delay(index*100)}
             onPress={handleOpen}
             style={{
                 flexDirection: 'row',

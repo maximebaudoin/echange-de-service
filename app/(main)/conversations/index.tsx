@@ -8,7 +8,7 @@ import * as Haptics from "expo-haptics";
 import { Conversation } from "@/constants/Conversation";
 import ConversationComponent from "@/components/ConversationComponent";
 import { SymbolView } from "expo-symbols";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, FadeOut, FadeOutDown } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { useConversations } from "@/hooks/useConversations";
 
@@ -99,7 +99,7 @@ const ConversationsScreen = () => {
                     <SymbolView name="arrow.left" size={23} weight="semibold" tintColor="#000000" />
                 </Pressable>
                 {showOverflowTitle && (
-                    <Animated.View entering={FadeInDown} exiting={FadeOutDown}>
+                    <Animated.View entering={FadeIn} exiting={FadeOut}>
                         <ThemedText type="subtitle">Conversations</ThemedText>
                     </Animated.View>
                 )}
@@ -118,6 +118,7 @@ const ConversationsScreen = () => {
                 refreshing={refreshing}
                 onRefresh={refreshConversations}
                 data={conversationsDisplayed}
+                keyExtractor={item => item.id}
                 renderItem={({item, index}) => (
                     <ConversationComponent
                         index={index}

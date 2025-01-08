@@ -5,6 +5,7 @@ import * as Notifications from "expo-notifications";
 import { useEffect, useRef, useState } from "react";
 import { registerForPushNotificationsAsync } from "@/utils/pushNotifications";
 import { ConversationProvider } from "@/hooks/useConversations";
+import * as Device from "expo-device";
 
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
@@ -25,6 +26,10 @@ export default function AppLayout() {
 		if (!session || !profile || !profile.completed) {
 			return;
 		}
+
+        if(!Device.isDevice) {
+            return;
+        }
 
 		registerForPushNotificationsAsync()
 			.then((token) => {

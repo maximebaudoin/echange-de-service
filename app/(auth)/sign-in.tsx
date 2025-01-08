@@ -1,6 +1,6 @@
 import { TransportNetwork, useSession } from "@/hooks/useSession";
 import { Redirect, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as Application from "expo-application";
 import * as Haptics from "expo-haptics";
@@ -20,7 +20,7 @@ WebBrowser.maybeCompleteAuthSession();
 const redirectUri = makeRedirectUri();
 
 export default function SignInScreen() {
-	const { session, setSession, setProfile, setSelectedTransportNetwork } = useSession();
+	const { session, setSession, profile, setProfile, setSelectedTransportNetwork } = useSession();
     const router = useRouter();
 
 	const logo = require("../../assets/images/icon.png");
@@ -29,13 +29,16 @@ export default function SignInScreen() {
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        if (session && profile) {
+            router.replace('/(main)/(tabs)');
+        }
+    }, [session, profile, router]);
+
 	const handleGitHubSignIn = async () => {
 		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
 
 		try {
-
-            console.log(redirectUri);
-            
 			// 1. Récupérer l'URL d'authentification pour GitHub via Supabase
 			const { data, error } = await supabase.auth.signInWithOAuth({
 				provider: "github",
@@ -67,8 +70,6 @@ export default function SignInScreen() {
 				});
 
 				if (sessionError) throw sessionError;
-
-				console.log("Session établie avec Supabase 🎉"); 
 
 				// Étape 5 : Récupérer l'utilisateur
 				const {data: {session}, error} = await supabase.auth.getSession();

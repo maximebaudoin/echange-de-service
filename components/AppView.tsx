@@ -13,10 +13,10 @@ const AppView = ({ children, style, edges = ['top', 'left', 'right'], keyboardAv
         <SafeAreaView style={[{ flex: 1 }, style]} edges={edges}>
             {children}
         </SafeAreaView>
-    );    
+    );
 
     if(keyboardAvoidingView) {
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        return <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             {body}
         </KeyboardAvoidingView>
     }

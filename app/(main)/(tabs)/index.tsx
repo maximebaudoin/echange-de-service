@@ -114,6 +114,7 @@ const TabsIndexScreen = () => {
                 refreshing={refreshing}
                 onRefresh={refreshPosts}
                 data={postsDisplayed}
+                keyExtractor={(item) => item.id}
                 renderItem={({item, index}) => (
                     <PostComponent
                         index={index}

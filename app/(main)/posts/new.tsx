@@ -159,7 +159,7 @@ const NewPostScreen = () => {
 					<SymbolView name="arrow.left" size={23} weight="semibold" tintColor="#000000" />
 				</Pressable>
 				{showOverflowTitle && (
-					<Animated.View entering={FadeInDown} exiting={FadeOutDown}>
+					<Animated.View entering={FadeIn} exiting={FadeOut}>
 						<ThemedText type="subtitle">Nouvelle annonce</ThemedText>
 					</Animated.View>
 				)}

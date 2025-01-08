@@ -3,8 +3,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { supabase } from "@/utils/supabase";
 import { router, useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import { FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import Animated, { Easing, FadeInDown, FadeOutDown, LinearTransition, useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -13,38 +13,51 @@ import MessageComponent from "@/components/MessageComponent";
 import { BlurView } from "@react-native-community/blur";
 import { Conversation } from "@/constants/Conversation";
 import { useSession } from "@/hooks/useSession";
-import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from "expo-linear-gradient";
+import MessageIsWritingComponent from "@/components/MessageIsWritingComponent";
+import Constants from "expo-constants";
+import { set } from "date-fns";
 
 const ConversationScreen = () => {
-    const { profile } = useSession();
-    
+	const { profile } = useSession();
+
 	const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
 	const channel = useRef<RealtimeChannel | null>(null);
 	const messageInputRef = useRef(null);
+	const isWritingTimeout = useRef<NodeJS.Timeout | null>(null);
 
 	const [showOverflowTitle, setShowOverflowTitle] = useState(false);
 	const [messageValue, setMessageValue] = useState<string>("");
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [conversation, setConversation] = useState<Conversation | null>(null);
 	const [refreshing, setRefreshing] = useState(false);
+	const [isWriting, setIsWriting] = useState(false);
+
+	const keyboard = useAnimatedKeyboard();
+	const animatedStyleMessageInput = useAnimatedStyle(() => ({
+		transform: [{ translateY: -keyboard.height.value }],
+	}));
+    const animatedStyleFlatListMessages = useAnimatedStyle(() => ({
+		paddingBottom: keyboard.height.value,
+	}));
 
 	useEffect(() => {
-        retrieveConversation();
+		retrieveConversation();
 		retrieveMessages();
 	}, []);
 
 	useEffect(() => {
-		channel.current = supabase.channel(`conversation_${conversationId}`, {
-			config: {
-				broadcast: {
-					self: true,
-				},
-			},
-		});
+		channel.current = supabase.channel(`conversation_${conversationId}`);
 
 		channel.current
 			.on("broadcast", { event: "message" }, ({ payload }) => {
-				handleInserts(payload);
+				handleReceiveMessage(payload);
+			})
+			.on("broadcast", { event: "isWriting" }, ({ payload }) => {
+				handleIsWriting(payload);
+			})
+			.on("broadcast", { event: "isSeen" }, ({ payload }) => {
+				handleIsSeen(payload);
 			})
 			.subscribe();
 
@@ -54,8 +67,69 @@ const ConversationScreen = () => {
 		};
 	}, []);
 
-	const handleInserts = (payload: any) => {
+	useEffect(() => {
+		clearTimeout(isWritingTimeout.current!);
+
+		channel.current?.send({
+			event: "isWriting",
+			payload: true,
+			type: "broadcast",
+		});
+
+		isWritingTimeout.current = setTimeout(() => {
+			channel.current?.send({
+				event: "isWriting",
+				payload: false,
+				type: "broadcast",
+			});
+		}, 5000);
+	}, [messageValue]);
+
+	const handleReceiveMessage = async (payload: Message) => {
 		setMessages([...messages, payload]);
+
+        if (!channel.current) {
+			return;
+		}
+        
+        try {
+			const { error } = await supabase
+				.from("messages")
+				.update({
+                    id: payload.id,
+                    is_seen: true,
+				});
+
+			if (error) {
+				throw new Error(error.message);
+			}
+
+			channel.current.send({
+				type: "broadcast",
+				event: "isSeen",
+				payload: payload.id,
+			});
+		} catch (err) {
+			if (err instanceof Error) {
+				console.log(err.message);
+			}
+		}
+	};
+
+	const handleIsWriting = (payload: boolean) => {
+		setIsWriting(payload);
+	};
+
+    const handleIsSeen = (payload: string) => {
+		const newMessages = messages.map((message) => {
+            if (message.id === payload) {
+                return { ...message, is_seen: true };
+            }
+
+            return message;
+        });
+
+        setMessages(newMessages);
 	};
 
 	const handleGoBack = () => {
@@ -63,42 +137,64 @@ const ConversationScreen = () => {
 		router.back();
 	};
 
-	function onSend() {
+	const handleSendMessage = async () => {
 		if (!channel.current || messageValue.trim().length === 0) {
 			return;
 		}
 
-		channel.current.send({
-			type: "broadcast",
-			event: "message",
-			payload: { message: { message: messageValue } },
-		});
+		try {
+			const { data: dataNewMessage, error: errorNewMessage } = await supabase
+				.from("messages")
+				.insert({
+					text: messageValue,
+					user_id: profile?.id,
+					conversation_id: conversationId,
+				})
+				.select()
+				.single();
 
-		setMessageValue("");
-	}
+			if (errorNewMessage) {
+				throw new Error(errorNewMessage.message);
+			}
 
-    const retrieveConversation = async () => {
+			channel.current.send({
+				type: "broadcast",
+				event: "message",
+				payload: dataNewMessage,
+			});
+
+			setMessages([dataNewMessage, ...messages]);
+		} catch (err) {
+			if (err instanceof Error) {
+				console.log(err.message);
+			}
+		}
+	};
+
+	const retrieveConversation = async () => {
 		setRefreshing(true);
 
 		try {
 			const { data, error } = await supabase
-                .from("conversations")
-                .select(`
+				.from("conversations")
+				.select(
+					`
                     id, created_at,
                     user1:profiles!conversations_user_id_1_fkey(id, first_name, last_name, image_url),
                     user2:profiles!conversations_user_id_2_fkey(id, first_name, last_name, image_url)
-                `)
-                .eq("id", conversationId)
-                .single();
+                `
+				)
+				.eq("id", conversationId)
+				.single();
 
 			if (error) {
 				throw new Error(error.message);
 			}
 
-            // @ts-ignore
-            const dataConversation = (data.user1.id === profile?.id) ? { id: data.id, created_at: data.created_at, user: data.user2 } : { id: data.id, created_at: data.created_at, user: data.user1 };
+			// @ts-ignore
+			const dataConversation = data.user1.id === profile?.id ? { id: data.id, created_at: data.created_at, user: data.user2 } : { id: data.id, created_at: data.created_at, user: data.user1 };
 
-            // @ts-ignore
+			// @ts-ignore
 			setConversation(dataConversation);
 		} catch (err) {
 			if (err instanceof Error) {
@@ -129,66 +225,74 @@ const ConversationScreen = () => {
 		}
 	};
 
-    if(conversation === null) {
-        return null;
-    }
+	if (conversation === null) {
+		return null;
+	}
 
 	return (
-		<AppView style={{ backgroundColor: '#fff' }} keyboardAvoidingView={true}>
-			<View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", gap: 16, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderColor: '#00000020' }}>
+		<AppView style={{ backgroundColor: "#fff" }} keyboardAvoidingView={false}>
+			<View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", gap: 16, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderColor: "#00000020" }}>
 				<Pressable style={{ padding: 16, margin: -16 }} onPress={handleGoBack}>
 					<SymbolView name="arrow.left" size={23} weight="semibold" tintColor="#000000" />
 				</Pressable>
-                <View style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 6
-                }}>
-                    <Image source={{ uri: conversation.user.image_url }} style={{ width: 35, height: 35, borderRadius: 99 }} />
-                    <Text style={{
-                        fontSize: 17,
-                        fontWeight: '600'
-                    }}>{conversation.user.first_name} {conversation.user.last_name}</Text>
-                </View>
+				<View
+					style={{
+						flexDirection: "row",
+						alignItems: "center",
+						gap: 6,
+					}}
+				>
+					<Image source={{ uri: conversation.user.image_url }} style={{ width: 35, height: 35, borderRadius: 99 }} />
+					<Text
+						style={{
+							fontSize: 17,
+							fontWeight: "600",
+						}}
+					>
+						{conversation.user.first_name} {conversation.user.last_name}
+					</Text>
+				</View>
 				{showOverflowTitle && (
 					<Animated.View entering={FadeInDown} exiting={FadeOutDown}>
 						<ThemedText type="subtitle">Conversations</ThemedText>
 					</Animated.View>
 				)}
 			</View>
-            <View style={{ flex: 1 }}>
-                <FlatList
-                    style={{
-                        flex: 1,
-                        backgroundColor: '#F1F1F1'
-                    }}
-                    contentContainerStyle={{
-                        alignItems: "stretch",
-                        gap: 8,
-                        padding: 16,
-                        paddingTop: 135,
-                    }}
-                    keyboardShouldPersistTaps="handled"
-                    inverted={true}
-                    showsVerticalScrollIndicator={true}
-                    data={messages}
-                    renderItem={({ item, index }) => <MessageComponent index={index} id={item.id} user_id={item.user_id} discussion_id={item.discussion_id} text={item.text} created_at={item.created_at} />}
-                />
-                {/* <LinearGradient colors={['#F1F1F1', 'transparent']} style={[StyleSheet.absoluteFill, { height: 30, top: 0 }]} /> */}
-            </View>
-			<View
-				style={{
-                    marginTop: -120,
+			<View style={{ flex: 1 }}>
+				<Animated.FlatList
+					style={[{
+						flex: 1,
+						backgroundColor: "#F1F1F1",
+					}, animatedStyleFlatListMessages]}
+					contentContainerStyle={{
+						alignItems: "stretch",
+						gap: 8,
+						padding: 16,
+						paddingTop: 135,
+					}}
+					itemLayoutAnimation={LinearTransition.easing(Easing.inOut(Easing.ease))}
+					ListHeaderComponent={isWriting ? <MessageIsWritingComponent /> : null}
+					keyboardShouldPersistTaps="handled"
+					inverted={true}
+					showsVerticalScrollIndicator={true}
+					data={messages}
+					renderItem={({ item, index }) => <MessageComponent index={index} id={item.id} user_id={item.user_id} conversation_id={item.conversation_id} text={item.text} created_at={item.created_at} is_seen={item.is_seen} />}
+				/>
+				{/* <LinearGradient colors={['#F1F1F1', 'transparent']} style={[StyleSheet.absoluteFill, { height: 30, top: 0 }]} /> */}
+			</View>
+			<Animated.View
+				style={[{
+					marginTop: -120,
 					padding: 16,
 					paddingBottom: 24,
-                    borderTopWidth: 1,
-                    borderColor: '#00000020',
-                    backgroundColor: '#FFFFFF88'
-				}}
+					borderTopWidth: 1,
+					borderColor: "#00000020",
+					backgroundColor: "#FFFFFF88",
+				}, animatedStyleMessageInput]}
 			>
-				<BlurView style={[StyleSheet.absoluteFill]} blurType="light" blurAmount={15} reducedTransparencyFallbackColor="black" />
-				<TextInput value={messageValue} onChangeText={setMessageValue} ref={messageInputRef} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }]} placeholder="Message" placeholderTextColor="#00000020" />
-			</View>
+				{Constants.appOwnership !== "expo" && <BlurView style={[StyleSheet.absoluteFill]} blurType="light" blurAmount={15} reducedTransparencyFallbackColor="black" />}
+				<TextInput onSubmitEditing={handleSendMessage} returnKeyType="done" returnKeyLabel="Envoyer" value={messageValue} onChangeText={setMessageValue} ref={messageInputRef} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }]} placeholder="Message" placeholderTextColor="#00000020" />
+			</Animated.View>
 		</AppView>
 	);
 };
