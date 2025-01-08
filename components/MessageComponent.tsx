@@ -23,9 +23,8 @@ const MessageComponent = ({
     const formatedCreatedAt = formatRelativeDate(created_at);
 
     return (
-        <Animated.View
-            entering={FadeInDown.delay(100+index*10)}
-            layout={FadeInLeft}
+        <View
+            // entering={FadeInDown.delay(100)}
             style={{
                 alignItems: isCurrentUser ? 'flex-end' : 'flex-start',
                 gap: 3
@@ -35,11 +34,11 @@ const MessageComponent = ({
                 backgroundColor: isCurrentUser ? '#00B2FF' : '#fff',
                 paddingHorizontal: 12,
                 paddingVertical: 8,
-                borderRadius: 14,
-                borderBottomLeftRadius: !isCurrentUser ? 0 : 14,
-                borderBottomRightRadius: isCurrentUser ? 0 : 14,
+                borderRadius: 18,
+                borderBottomLeftRadius: !isCurrentUser ? 6 : 18,
+                borderBottomRightRadius: isCurrentUser ? 6 : 18,
                 maxWidth: '80%',
-                borderWidth: 1,
+                borderWidth: 0,
                 borderColor: isCurrentUser ? '#029fe3' : '#00000015',
             }}>
                 <Text style={{
@@ -55,15 +54,15 @@ const MessageComponent = ({
                 gap: 4,
                 paddingHorizontal: 2
             }}>
-                <Text style={{
+                {/* <Text style={{
                     color: '#00000055',
                     fontSize: 12,
                 }}>
                     {formatedCreatedAt.charAt(0).toUpperCase() + formatedCreatedAt.slice(1)}
-                </Text>
+                </Text> */}
                 {is_seen && <SymbolView name="eye.fill" tintColor="#029fe355" size={20} />}
             </View>
-        </Animated.View>
+        </View>
     );
 }
  

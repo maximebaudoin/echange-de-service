@@ -6,7 +6,7 @@ import { SymbolView } from "expo-symbols";
 import { FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { Easing, FadeInDown, FadeOutDown, LinearTransition, useAnimatedKeyboard, useAnimatedStyle } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { Message } from "@/constants/Message";
 import MessageComponent from "@/components/MessageComponent";
@@ -37,7 +37,7 @@ const ConversationScreen = () => {
 	const animatedStyleMessageInput = useAnimatedStyle(() => ({
 		transform: [{ translateY: -keyboard.height.value }],
 	}));
-    const animatedStyleFlatListMessages = useAnimatedStyle(() => ({
+	const animatedStyleFlatListMessages = useAnimatedStyle(() => ({
 		paddingBottom: keyboard.height.value,
 	}));
 
@@ -65,9 +65,13 @@ const ConversationScreen = () => {
 			channel.current?.unsubscribe();
 			channel.current = null;
 		};
-	}, []);
+	}, [conversationId]);
 
 	useEffect(() => {
+        if(messageValue.trim().length === 0) {
+            return;
+        }
+
 		clearTimeout(isWritingTimeout.current!);
 
 		channel.current?.send({
@@ -85,20 +89,20 @@ const ConversationScreen = () => {
 		}, 5000);
 	}, [messageValue]);
 
-	const handleReceiveMessage = async (payload: Message) => {
-		setMessages([...messages, payload]);
+	const handleReceiveMessage = useCallback(async (payload: Message) => {
+		setMessages([payload, ...messages]);
 
-        if (!channel.current) {
+		if (!channel.current) {
 			return;
 		}
-        
-        try {
+
+		try {
 			const { error } = await supabase
 				.from("messages")
 				.update({
-                    id: payload.id,
-                    is_seen: true,
-				});
+					is_seen: true,
+				})
+				.eq("id", payload.id);
 
 			if (error) {
 				throw new Error(error.message);
@@ -114,30 +118,33 @@ const ConversationScreen = () => {
 				console.log(err.message);
 			}
 		}
-	};
+	}, []);
 
-	const handleIsWriting = (payload: boolean) => {
+	const handleIsWriting = useCallback((payload: boolean) => {
 		setIsWriting(payload);
-	};
+	}, []);
 
-    const handleIsSeen = (payload: string) => {
-		const newMessages = messages.map((message) => {
-            if (message.id === payload) {
-                return { ...message, is_seen: true };
-            }
+	const handleIsSeen = useCallback((payload: string) => {
+        setTimeout(() => {
+            const newMessages = messages.map((message) => {
+                if (message.id === payload) {
+                    return { ...message, is_seen: true };
+                }
 
-            return message;
-        });
+                return message;
+            });
 
-        setMessages(newMessages);
-	};
+            setMessages(newMessages);
+        }, 700);
+        
+	}, [messages]);
 
-	const handleGoBack = () => {
+	const handleGoBack = useCallback(() => {
 		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 		router.back();
-	};
+	}, []);
 
-	const handleSendMessage = async () => {
+	const handleSendMessage = useCallback(async () => {
 		if (!channel.current || messageValue.trim().length === 0) {
 			return;
 		}
@@ -163,15 +170,29 @@ const ConversationScreen = () => {
 				payload: dataNewMessage,
 			});
 
+            console.log(messages);
+            console.log(dataNewMessage);
+            
+            
+
 			setMessages([dataNewMessage, ...messages]);
+			setMessageValue("");
+
+			clearTimeout(isWritingTimeout.current!);
+
+			channel.current.send({
+				event: "isWriting",
+				payload: false,
+				type: "broadcast",
+			});
 		} catch (err) {
 			if (err instanceof Error) {
 				console.log(err.message);
 			}
 		}
-	};
+	}, [messageValue, profile?.id, conversationId]);
 
-	const retrieveConversation = async () => {
+	const retrieveConversation = useCallback(async () => {
 		setRefreshing(true);
 
 		try {
@@ -203,7 +224,7 @@ const ConversationScreen = () => {
 		} finally {
 			setRefreshing(false);
 		}
-	};
+	}, [conversationId]);
 
 	const retrieveMessages = async () => {
 		setRefreshing(true);
@@ -258,12 +279,12 @@ const ConversationScreen = () => {
 					</Animated.View>
 				)}
 			</View>
-			<View style={{ flex: 1 }}>
+			<Animated.View style={[{ flex: 1 }, animatedStyleFlatListMessages]}>
 				<Animated.FlatList
-					style={[{
+					style={{
 						flex: 1,
 						backgroundColor: "#F1F1F1",
-					}, animatedStyleFlatListMessages]}
+					}}
 					contentContainerStyle={{
 						alignItems: "stretch",
 						gap: 8,
@@ -279,16 +300,19 @@ const ConversationScreen = () => {
 					renderItem={({ item, index }) => <MessageComponent index={index} id={item.id} user_id={item.user_id} conversation_id={item.conversation_id} text={item.text} created_at={item.created_at} is_seen={item.is_seen} />}
 				/>
 				{/* <LinearGradient colors={['#F1F1F1', 'transparent']} style={[StyleSheet.absoluteFill, { height: 30, top: 0 }]} /> */}
-			</View>
+			</Animated.View>
 			<Animated.View
-				style={[{
-					marginTop: -120,
-					padding: 16,
-					paddingBottom: 24,
-					borderTopWidth: 1,
-					borderColor: "#00000020",
-					backgroundColor: "#FFFFFF88",
-				}, animatedStyleMessageInput]}
+				style={[
+					{
+						marginTop: -120,
+						padding: 16,
+						paddingBottom: 24,
+						borderTopWidth: 1,
+						borderColor: "#00000020",
+						backgroundColor: "#FFFFFF88",
+					},
+					animatedStyleMessageInput,
+				]}
 			>
 				{Constants.appOwnership !== "expo" && <BlurView style={[StyleSheet.absoluteFill]} blurType="light" blurAmount={15} reducedTransparencyFallbackColor="black" />}
 				<TextInput onSubmitEditing={handleSendMessage} returnKeyType="done" returnKeyLabel="Envoyer" value={messageValue} onChangeText={setMessageValue} ref={messageInputRef} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }]} placeholder="Message" placeholderTextColor="#00000020" />

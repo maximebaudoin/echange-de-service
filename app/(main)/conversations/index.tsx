@@ -118,7 +118,6 @@ const ConversationsScreen = () => {
                 refreshing={refreshing}
                 onRefresh={refreshConversations}
                 data={conversationsDisplayed}
-                keyExtractor={item => item.id}
                 renderItem={({item, index}) => (
                     <ConversationComponent
                         index={index}
