@@ -121,7 +121,7 @@ const ConversationScreen = () => {
 	}, []);
 
 	const handleIsWriting = useCallback((payload: boolean) => {
-		setIsWriting(payload);
+		setIsWriting(payload); 
 	}, []);
 
 	const handleIsSeen = useCallback((payload: string) => {
