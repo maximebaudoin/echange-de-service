@@ -10,13 +10,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { Message } from "@/constants/Message";
 import MessageComponent from "@/components/MessageComponent";
-import { BlurView } from "@react-native-community/blur";
 import { Conversation } from "@/constants/Conversation";
 import { useSession } from "@/hooks/useSession";
 import { LinearGradient } from "expo-linear-gradient";
 import MessageIsWritingComponent from "@/components/MessageIsWritingComponent";
 import Constants from "expo-constants";
 import { set } from "date-fns";
+import { BlurView } from "expo-blur";
 
 const ConversationScreen = () => {
 	const { profile } = useSession();
@@ -314,7 +314,7 @@ const ConversationScreen = () => {
 					animatedStyleMessageInput,
 				]}
 			>
-				{Constants.appOwnership !== "expo" && <BlurView style={[StyleSheet.absoluteFill]} blurType="light" blurAmount={15} reducedTransparencyFallbackColor="black" />}
+				{Constants.appOwnership !== "expo" && <BlurView style={[StyleSheet.absoluteFill]} />}
 				<TextInput onSubmitEditing={handleSendMessage} returnKeyType="done" returnKeyLabel="Envoyer" value={messageValue} onChangeText={setMessageValue} ref={messageInputRef} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }]} placeholder="Message" placeholderTextColor="#00000020" />
 			</Animated.View>
 		</AppView>
