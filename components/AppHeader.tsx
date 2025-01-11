@@ -62,7 +62,7 @@ const AppHeader = () => {
 				</Text>
 			</View>
 			<View style={{ flex: 1, justifyContent: 'flex-end', flexDirection: 'row' }}>
-				{/* <Pressable
+				<Pressable
 					style={{
 						borderRadius: 99,
 						backgroundColor: "#fff",
@@ -73,7 +73,7 @@ const AppHeader = () => {
 						borderWidth: 1,
 						borderColor: "#00000015",
 					}}
-					onPress={() => signOut()}
+					onPress={() => setProfile({ ...profile, id: '47b8e569-2f74-4a9f-8567-423d0b1e089e'})}
 				>
 					<SymbolView name="rectangle.portrait.and.arrow.right" tintColor="#cc0000DD" size={24} weight="bold" />
 				</Pressable>
@@ -91,7 +91,7 @@ const AppHeader = () => {
 					onPress={() => setProfile({ ...profile, completed: false })}
 				>
 					<SymbolView name="pencil" tintColor="#000000DD" size={20} weight="bold" />
-				</Pressable> */}
+				</Pressable>
 				<Pressable
 					style={{
 						borderRadius: 99,

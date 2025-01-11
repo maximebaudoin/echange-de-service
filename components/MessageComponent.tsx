@@ -12,9 +12,13 @@ const MessageComponent = ({
     user_id,
     conversation_id,
     created_at,
-    is_seen
+    is_seen,
+    isLastOfUser,
+    isFirstOfUser
 }: Message & {
-    index: number
+    index: number;
+    isLastOfUser: boolean;
+    isFirstOfUser: boolean;
 }) => {
     const { profile } = useSession();
     const { formatRelativeDate } = useHelpers();
@@ -27,7 +31,8 @@ const MessageComponent = ({
             // entering={FadeInDown.delay(100)}
             style={{
                 alignItems: isCurrentUser ? 'flex-end' : 'flex-start',
-                gap: 3
+                gap: 3,
+                marginBottom: isLastOfUser ? 8 : 0
             }}
         >
             <View style={{
@@ -35,17 +40,19 @@ const MessageComponent = ({
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 18,
-                borderBottomLeftRadius: !isCurrentUser ? 6 : 18,
-                borderBottomRightRadius: isCurrentUser ? 6 : 18,
+                borderTopLeftRadius: !isCurrentUser ? (!isFirstOfUser ? 5 : 18) : 18,
+                borderTopRightRadius: isCurrentUser ? (!isFirstOfUser ? 5 : 18) : 18,
+                borderBottomLeftRadius: !isCurrentUser ? (!isLastOfUser ? 5 : 18) : 18,
+                borderBottomRightRadius: isCurrentUser ? (!isLastOfUser ? 5 : 18) : 18,
                 maxWidth: '80%',
                 borderWidth: 0,
                 borderColor: isCurrentUser ? '#029fe3' : '#00000015',
             }}>
                 <Text style={{
                     color: isCurrentUser ? '#fff' : '#000',
-                    fontWeight: isCurrentUser ? 500 : 400,
+                    fontWeight: isCurrentUser ? 400 : 400,
                     lineHeight: 19,
-                    fontSize: 15
+                    fontSize: 16
                 }}>{text}</Text>
             </View>
             <View style={{

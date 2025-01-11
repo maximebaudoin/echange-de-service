@@ -170,11 +170,6 @@ const ConversationScreen = () => {
 				payload: dataNewMessage,
 			});
 
-            console.log(messages);
-            console.log(dataNewMessage);
-            
-            
-
 			setMessages([dataNewMessage, ...messages]);
 			setMessageValue("");
 
@@ -287,9 +282,10 @@ const ConversationScreen = () => {
 					}}
 					contentContainerStyle={{
 						alignItems: "stretch",
-						gap: 8,
+						gap: 0,
 						padding: 16,
-						paddingTop: 135,
+						paddingTop: 127,
+                        paddingHorizontal: 12,
 					}}
 					itemLayoutAnimation={LinearTransition.easing(Easing.inOut(Easing.ease))}
 					ListHeaderComponent={isWriting ? <MessageIsWritingComponent /> : null}
@@ -297,7 +293,11 @@ const ConversationScreen = () => {
 					inverted={true}
 					showsVerticalScrollIndicator={true}
 					data={messages}
-					renderItem={({ item, index }) => <MessageComponent index={index} id={item.id} user_id={item.user_id} conversation_id={item.conversation_id} text={item.text} created_at={item.created_at} is_seen={item.is_seen} />}
+					renderItem={({ item, index }) => {
+                        const isFirstOfUser = index === messages.length - 1 || messages[index + 1].user_id !== item.user_id;
+                        const isLastOfUser = index === 0 || messages[index - 1].user_id !== item.user_id;
+                        return <MessageComponent isLastOfUser={isLastOfUser} isFirstOfUser={isFirstOfUser} index={index} id={item.id} user_id={item.user_id} conversation_id={item.conversation_id} text={item.text} created_at={item.created_at} is_seen={item.is_seen} />
+                    }}
 				/>
 				{/* <LinearGradient colors={['#F1F1F1', 'transparent']} style={[StyleSheet.absoluteFill, { height: 30, top: 0 }]} /> */}
 			</Animated.View>
@@ -314,8 +314,8 @@ const ConversationScreen = () => {
 					animatedStyleMessageInput,
 				]}
 			>
-				{Constants.appOwnership !== "expo" && <BlurView style={[StyleSheet.absoluteFill]} />}
-				<TextInput onSubmitEditing={handleSendMessage} returnKeyType="done" returnKeyLabel="Envoyer" value={messageValue} onChangeText={setMessageValue} ref={messageInputRef} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }]} placeholder="Message" placeholderTextColor="#00000020" />
+				<BlurView style={[StyleSheet.absoluteFill]} />
+				<TextInput onSubmitEditing={handleSendMessage} submitBehavior="submit" returnKeyType="done" returnKeyLabel="Envoyer" value={messageValue} onChangeText={setMessageValue} ref={messageInputRef} style={[{ borderWidth: 1, borderColor: "#00000020", backgroundColor: "#fff", fontSize: 17, borderRadius: 12, height: 50, paddingHorizontal: 16 }]} placeholder="Message" placeholderTextColor="#00000020" />
 			</Animated.View>
 		</AppView>
 	);
